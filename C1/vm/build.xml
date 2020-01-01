@@ -1,0 +1,36 @@
+<project name="vm" basedir=".">
+    <taskdef resource="cpptasks.tasks"/>
+    <typedef resource="cpptasks.types"/>
+
+    <property name="src" location="." />
+    <property name="build" location="build" />
+    <property name="bin" location="../bin" />
+    <property name="test" location="../test" />
+
+   <target name="init">
+  	<tstamp/>
+	  <mkdir dir="${bin}"/>
+   </target>
+
+   <target name="vm" description="vm build" depends="init">
+      <cc name="g++" outfile="${bin}/vm" outtype="executable" subsystem="console">
+        <compiler name="g++">
+          <compilerarg value="-g" />
+          <compilerarg value="-ggdb" />
+        </compiler>
+        <linker name="g++">
+          <libset libs="stdc++"/>
+        </linker>
+
+	     <fileset dir="${src}">
+         <include name="vm.cpp"/>
+         <include name="main.cpp"/>
+	     </fileset>
+     </cc>
+   </target>
+
+    <target name="clean">
+	    <delete file="${bin}/vm" />
+    </target>
+
+</project>

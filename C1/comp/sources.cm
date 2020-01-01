@@ -1,0 +1,15 @@
+(*
+**  sources.cm
+**  vm
+**
+**  Created by Ovidiu Podisor on 01/30/19.
+**  Copyright © 2019 innodocs. All rights reserved.
+*)
+
+Group is
+
+absyn.sml
+compiler.sml
+
+$/basis.cm
+$/smlnj-lib.cm
