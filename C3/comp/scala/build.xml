@@ -1,0 +1,162 @@
+<project name="vm-comp" basedir="." default="dist">
+
+	
+  <!-- scala/scalac setup -->
+  <property environment="env" />
+  <property name="scala.home" value="${env.SCALA_HOME}" />
+  
+  <!-- 'scalac' hack due to removal of ant support in scala 2.13 -->
+  <target name="scalac">
+    <exec executable="scalac" failonerror="true">
+      <arg line="-cp ${scalac:lib.dir} " />
+      <arg line="-d ${scalac:build.dir}" />
+      <arg line="${scalac:files}" />
+    	<arg line="-deprecation" />
+    </exec>
+  </target>
+  <target name="scala">
+    <exec executable="scala" failonerror="true">
+      <arg line="-cp ${scala:lib.dir} " />
+      <arg line="-d ${scala:build.dir}" />
+      <arg line="${scala:files}" />
+      <arg line="-deprecation" />
+    </exec>
+  </target>
+	
+	
+  <!-- antlr setup -->
+  <property environment="env" />
+  <property name="antlr.home" value="${env.ANTLR_HOME}" />
+  <property name="antlr" location="${antlr.home}/antlr-4.8-complete.jar" />
+  <path id="antlr">
+    <pathelement path="${antlr}"/>
+  </path>
+
+	
+	<!-- build properties -->
+  <property name="class.name" value="SLP" />  
+  <property name="sources.dir" value="." />
+  <property name="build.dir" value="classes" />
+  <property name="dist.dir" value="../../bin" />
+  <property name="dist-lib.dir" value=".vm" />
+  <property name="prog.name" value="vm-comp" />  
+  <property name="test.dir" value="../../test" />
+
+	
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.dir}/${dist-lib.dir}"/>
+    
+    <uptodate property="compileGrm.notRequired"
+      srcfile="${sources.dir}/${class.name}.g4"
+      targetfile="${sources.dir}/${class.name}Lexer.java" />
+  </target>
+
+	
+  <target name="compile-grm" depends="init" unless="compileGrm.notRequired">
+    <!-- antlr task not supported anymore???
+     <antlr target="${sources.dir}/${class.name}.g4" outputdirectory="${sources.dir}" />
+     -->
+    <java dir="${sources.dir}" classname="org.antlr.v4.Tool" >
+      <classpath refid="antlr"/>
+      <arg value="${class.name}.g4" />
+    	<!-- <arg value="-visitor" />
+    	<arg value="-no-listener" /> -->
+    </java>
+  </target>
+	
+	
+  <target name="compile" depends="compile-grm">
+  	<!-- ant support was removed in scala 2.13
+    <scalac srcdir="${sources.dir}"
+            destdir="${build.dir}"
+            classpathref="build.classpath"
+            deprecation="on">
+      <include name="${scala-source.dir}/**/*.scala" />
+    </scalac>
+    -->
+    <javac srcdir="${sources.dir}" destdir="${build.dir}" includeantruntime="false"> 
+       <classpath refid="antlr"/>      
+     </javac>
+    <pathconvert property="compile:files" pathsep=" ">
+        <fileset dir="${sources.dir}">
+            <include name="**/*.scala"/>
+            <exclude name="**/test*"/>
+        </fileset>
+    </pathconvert>
+    <antcall target="scalac">
+    	<param name="scalac:lib.dir" value="${antlr}:${build.dir}" />
+    	<param name="scalac:build.dir" value="'${build.dir}'" />
+      <param name="scalac:files" value="${compile:files}"/>
+    </antcall>
+  </target>
+	
+	
+  <target name="dist" depends="compile">
+    <!-- create jar file -->
+    <jar destfile="${dist.dir}/${dist-lib.dir}/${prog.name}.jar" basedir="${build.dir}">
+      <manifest>
+        <attribute name="Built-By" value="OP"/>
+        <attribute name="Build-Date" value="${TODAY}"/>
+        <attribute name="Main-Class" value="${class.name}"/>  
+      </manifest>
+    </jar>
+    
+    <!-- create shell script -->
+    <echo file="${dist.dir}/${prog.name}" append="false">#!/bin/bash
+SCRIPT_DIR="$( dirname "$0" )"
+exec "/usr/local/bin/scala" -cp "${antlr}:$SCRIPT_DIR/${dist-lib.dir}/${prog.name}.jar" ${class.name} "$@"
+    </echo>
+    <chmod file="${dist.dir}/${prog.name}" perm="755"/>
+  </target>
+	
+	
+  <target name="test" depends="compile">
+    <!-- ant support was removed in scala 2.13
+    <scalac srcdir="${sources.dir}"
+            destdir="${build.dir}"
+            classpathref="build.classpath"
+            deprecation="on">
+      <include name="${scala-source.dir}/**/*.scala" />
+    </scalac>
+    -->
+    <pathconvert property="test:files" pathsep=" ">
+        <fileset dir="${sources.dir}">
+            <include name="**/test*.scala"/>
+        </fileset>
+    </pathconvert>
+    <antcall target="scalac">
+      <param name="scalac:lib.dir" value="${antlr}:${build.dir}" />
+      <param name="scalac:build.dir" value="'${build.dir}'" />
+      <param name="scalac:files" value="${test:files}"/>
+    </antcall>
+    <antcall target="scala">
+      <param name="scala:lib.dir" value="${antlr}:${build.dir}" />
+      <param name="scala:build.dir" value="'${build.dir}'" />
+      <param name="scala:files" value="Test"/>
+    </antcall> 	
+  </target>
+	
+	
+  <target name="clean">
+    <delete dir="${build.dir}" quiet="true"/>
+
+    <delete>
+      <fileset dir="${sources.dir}"
+          excludes="${class.name}.scala ${class.name}.java ${class.name}.g4"
+          includes="${class.name}*"/>
+    </delete>
+    
+    <delete file="${dist.dir}/${dist-lib.dir}/${prog.name}.jar" quiet="true"/>
+    <delete dir="${dist.dir}/${dist-lib.dir}" quiet="true"/>
+    <delete file="${dist.dir}/${prog.name}" quiet="true"/>    
+    
+  	<!--
+    <delete>
+      <fileset dir="${test.dir}" includes="test.vm" />
+    </delete> -->
+  </target>
+	
+</project>

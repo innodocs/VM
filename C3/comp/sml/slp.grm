@@ -1,0 +1,42 @@
+%%
+%name SLP
+%verbose
+
+%term INT of int | ID of string | PLUS | MINUS | TIMES | DIV
+      | ASSIGN | PRINT | LPAREN | RPAREN | COMMA | SEMICOLON | EOF
+      
+%nonterm  exp of Absyn.exp | exps of Absyn.exp list| stm of Absyn.stm | prog of Absyn.stm
+
+%right SEMICOLON
+%left PLUS MINUS
+%left TIMES DIV
+
+%start prog
+%eop EOF
+%noshift EOF
+
+%pos int
+
+%value ID ("bogus")
+%value INT (1)
+
+%%
+
+prog: stm                         (stm)
+
+stm : stm SEMICOLON               (stm)
+stm : stm SEMICOLON stm           (Absyn.CompoundStm(stm1, stm2))
+stm : ID ASSIGN exp               (Absyn.AssignStm(ID, exp))
+stm : PRINT LPAREN exps RPAREN    (Absyn.PrintStm(exps))
+
+exps: exp                         (exp :: nil)
+exps: exp COMMA exps              (exp :: exps)
+
+exp : INT                         (Absyn.NumExp(INT))
+exp : ID                          (Absyn.IdExp(ID))
+exp : exp PLUS exp                (Absyn.OpExp(exp1, Absyn.Plus, exp2))
+exp : exp MINUS exp               (Absyn.OpExp(exp1, Absyn.Minus, exp2))
+exp : exp TIMES exp               (Absyn.OpExp(exp1, Absyn.Times, exp2))
+exp : exp DIV exp                 (Absyn.OpExp(exp1, Absyn.Div, exp2))
+exp : stm COMMA exp               (Absyn.EseqExp(stm, exp))
+exp : LPAREN exp RPAREN           (exp)

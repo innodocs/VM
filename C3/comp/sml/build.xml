@@ -1,0 +1,60 @@
+<project name="comp/sml" basedir="." default="compile-grm">
+
+  <!-- set sml.home -->
+  <property environment="env" />
+  <property name="sml.home" value="${env.SML_HOME}" />
+
+  <property name="sources.dir" value="." />
+	
+  <target name="init">
+	  <tstamp/>
+ 
+    <uptodate property="compileLex.notRequired"
+      srcfile="${sources.dir}/slp.lex" targetfile="${sources.dir}/slp.lex.sml" />  	
+  	<uptodate property="compileGrm.notRequired"
+  	  srcfile="${sources.dir}/slp.grm" targetfile="${sources.dir}/slp.grm.sml" />
+  </target>
+
+  <target name="compile-lex" depends="init" unless="compileLex.notRequired">
+
+    <exec executable="ml-lex" failonerror="true">
+      <arg line="${sources.dir}/slp.lex" />
+    </exec>
+    <exec executable="ml-yacc" failonerror="true">
+      <arg line="${sources.dir}/slp.grm" />
+    </exec> 
+  </target>
+	
+  <target name="compile-grm" depends="compile-lex" unless="compileGrm.notRequired">
+
+    <exec executable="ml-yacc" failonerror="true">
+      <arg line="${sources.dir}/slp.grm" />
+    </exec>	
+  </target>
+        
+  <target name="clean">
+  	<delete>
+      <fileset dir="${sources.dir}">
+        <include name="*.lex.sml" />
+      </fileset>
+  	</delete>
+    <delete>
+      <fileset dir="${sources.dir}">
+        <include name="*.grm.desc" />
+      </fileset>
+    </delete>
+    <delete>
+      <fileset dir="${sources.dir}">
+        <include name="*.grm.sig" />
+      </fileset>
+    </delete>  	
+    <delete>
+      <fileset dir="${sources.dir}">
+        <include name="*.grm.sml" />
+      </fileset>
+    </delete>
+  	
+    <delete dir="${sources.dir}/.cm" quiet="true"/>
+  </target>
+	
+</project>
