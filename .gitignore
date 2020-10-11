@@ -3,3 +3,7 @@
 
 # ignore eclipse workspace files
 **/.metadata
+**/.project
+
+# ignore mac os FS files
+**/.DS_Store

@@ -1,0 +1,51 @@
+<project name="vm" basedir="." default="dist">
+	
+  <taskdef resource="net/sf/antcontrib/antlib.xml"/>
+  <taskdef resource="cpptasks.tasks"/>
+  <typedef resource="cpptasks.types"/> 
+  
+  <property name="src" location="." />
+  <property name="build" location="build" />
+  <property name="bin" location="../bin" />
+  <property name="test" location="../test" />
+  
+   <target name="init">
+     <tstamp/>
+     <mkdir dir="${build}"/>
+     <mkdir dir="${bin}"/>
+   </target>
+  
+   <target name="compile" description="build vm" depends="init">
+     <cc name="g++" outfile="${build}/vm" outtype="executable" subsystem="console">
+       <compiler name="g++">
+         <compilerarg value="-std=c++17" />
+         <compilerarg value="-g" />
+         <compilerarg value="-ggdb" />
+      </compiler>
+      <linker name="g++">
+        <libset libs="stdc++"/>
+      </linker>
+  
+      <fileset dir="${src}">
+        <include name="main.cpp"/>
+   	    <include name="VM.cpp"/>
+      </fileset>
+    </cc>
+  </target>
+  
+  <target name="dist" depends="compile">
+  	<!-- <copy file="${build}/vm" todir="${bin}"/>
+  	  use 'exec' to preserve file permissions
+  	-->
+  	<exec executable="cp">
+  	  <arg value="${build}/vm"/>
+      <arg value="${bin}/vm"/>
+    </exec>
+  </target>
+  
+  <target name="clean">
+    <delete dir="${build}"/>
+  	<delete file="${bin}/vm"/>
+  </target>
+	
+</project>
