@@ -7,38 +7,48 @@
 //
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <filesystem>
+#include <functional>
+
 using namespace std;
 
-#include "vm.h"
+#include "VM.h"
 
 
-VM::VM(const char* _codeFileName, unsigned long _stackSize, bool _isVerbose, bool _includeDump)
+const char* VM::version() noexcept
 {
-  isVerbose = _isVerbose;
-  includeDump = _includeDump;
+  static char VM_version[128];
+  sprintf(VM_version,
+    "VM code runner version %d.%d -- Copyright 2002-2020, InnoDocs & Innovative Systems, Inc.",
+	MAJOR_VERSION, MINOR_VERSION);
 
-  CB = 0; CL = 0;
-  GB = 0; GL = 0;
-  SB = 0; SL = 0;
+  return VM_version;
+}
 
-  IP = 0;
-  TS = 0;
+VM::VM(const char* _codeFileName, Options _options) noexcept
+      : codeFileName(_codeFileName), options(_options)
+{
+  CB = NULL; CL = NULL;
+  GB = NULL; GL = NULL;
+  OB = NULL; OL = NULL;
+
+  IP = NULL;
+  OP = NULL;
 
   fileSize = 0;
   filePos = 0;
-  init(_codeFileName, _stackSize);
 }
 
 VM::~VM()
 {
-  delete CB; CB = 0; CL = 0;
-  delete GB; GB = 0; GL = 0;
-  delete SB; SB = 0; SL = 0;
+  delete CB; CB = NULL; CL = NULL;
+  delete GB; GB = NULL; GL = NULL;
+  delete OB; OB = NULL; OL = NULL;
 
   IP = NULL;
-  TS = NULL;
+  OP = NULL;
 }
 
 void VM::init(const char* codeFileName, unsigned long stackSize)
@@ -47,14 +57,14 @@ void VM::init(const char* codeFileName, unsigned long stackSize)
   loadCode(codeFileName);
 
   // init stack storage
-  SB = new VMObj[stackSize];
-  if (SB == NULL)
+  OB = new VMObj[stackSize];
+  if (OB == NULL)
     throw MemoryError();
-  SL = SB + stackSize;
+  OL = OB + stackSize;
 
   // init registers
   IP = CB;
-  TS = SB-1;
+  OP = OB-1;
 }
 
 int VM::readInt(istream_iterator<uint8_t>& si)
@@ -64,7 +74,7 @@ int VM::readInt(istream_iterator<uint8_t>& si)
   uint8_t b1 = *si++;
   uint8_t b0 = *si++;
   filePos += 4;
-
+  
   return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
 }
 
@@ -73,49 +83,52 @@ void VM::loadCode(const char *codeFileName)
   error_code ec;
   fileSize = filesystem::file_size(filesystem::path(codeFileName), ec);
   if (fileSize == static_cast<std::uintmax_t>(-1))
-	  throw new InvalidCodeFileError(/*codeFileName*/);
-  if (isVerbose)
-    cerr << "File size: " << fileSize << endl;
+	  throw InvalidCodeFileError(codeFileName);
+  if (options.warn || options.disassemble)
+    cout << (options.disassemble ? "// " : "") << "File size: " << fileSize << endl;
 
   ifstream cfs(codeFileName, ifstream::in|ifstream::binary);
   if (! cfs.is_open())
-    throw new InvalidCodeFileError(/*codeFileName*/);
+    throw InvalidCodeFileError(codeFileName);
   noskipws(cfs); // why do you need to call this, when you opened in binary mode????
   istream_iterator<uint8_t> cfi(cfs);
 
   // check validity of code file: magic number
   int magic = readInt(cfi);
   if (magic != MAGIC)
-    throw new InvalidCodeFileError(/*codeFileName*/);
+    throw InvalidCodeFileError(codeFileName);
   int majorVersion = readInt(cfi);
   if (majorVersion > MAJOR_VERSION)
-    throw new InvalidCodeFileError(/*codeFileName*/);
+    throw InvalidCodeFileError(codeFileName);
   int minorVersion = readInt(cfi);
   if (minorVersion > MINOR_VERSION)
-    throw new InvalidCodeFileError(/*codeFileName*/);
+    throw InvalidCodeFileError(codeFileName);
   // TODO: check validity of code file: checksum
   unsigned long checksum = 0;
 
+  int globalsMarker = readInt(cfi);
+  if (globalsMarker != GLBLS)
+    throw InvalidCodeFileError(codeFileName);
   int globalsSize = readInt(cfi);
   if (globalsSize < 0)
-	  globalsSize = 0;
+    globalsSize = 0;
   if (globalsSize > 0) {
-	  GB = new VMObj[globalsSize];
-	  if (GB == NULL)
-		  throw MemoryError();
+    GB = new VMObj[globalsSize];
+    if (GB == NULL)
+      throw MemoryError();
   }
   GL = GB + globalsSize;
-  if (isVerbose)
-    cerr << "Globals size: " << globalsSize << endl;
-
+  if (options.warn || options.disassemble)
+    cout << (options.disassemble ? "// " : "") << "Globals size: " << globalsSize << endl;
+  
   uintmax_t codeSize = fileSize - filePos;
-  if (isVerbose)
-    cerr << "Code size: " << codeSize << endl;
+  if (options.warn || options.disassemble)
+    cout << (options.disassemble ? "// " : "") << "Code size: " << codeSize << endl;
 
-  CB = new int[(codeSize+sizeof(int)-1)/sizeof(int) + 2];
+  CB = new int[(codeSize+sizeof(int)-1)/sizeof(int) + 1];
   if (CB == NULL)
     throw MemoryError();
-  CL = CB + (codeSize+sizeof(int)-1)/sizeof(int) + 2;
+  CL = CB + (codeSize+sizeof(int)-1)/sizeof(int) + 1;
 
   int pos = 0;
   while (filePos + 4 <= fileSize)
@@ -124,174 +137,241 @@ void VM::loadCode(const char *codeFileName)
     CB[pos++] = instr;
   }
 
-  // end buffer w/ halt instruction
+  // end buffer w/ 'HALT' sentinel, just in case compiler missed it
   CB[pos++] = HALT;
-  CB[pos++] = HALT;
+  //CB[pos++] = HALT;
 }
+
+
+void VM::run()
+{
+  unsigned long stackSize = options.stackSize;
+  if (stackSize < 1024)
+    stackSize = 1024;
+  stackSize *= 1024;
+
+  init(codeFileName, stackSize);
+
+  if (options.disassemble)
+    disassemble(cout);
+  else {
+    execCode();
+
+    if (OP >= OB) {
+      cerr << "Warning: unused elements left on stack" << endl;
+      dumpStack(cerr);
+    }
+  }
+}
+
+
+/*
+* memory dump
+*/
+void VM::dumpGlobals(ostream& os) const
+{
+  if (GB != NULL && GL != NULL && GB < GL) {
+    int pos = 0;
+    for (VMObj *gp = GB; gp < GL; gp++) {
+      os << pos << ": 0x" << hex << gp[0].i
+    		    << " ("   << dec << gp[0].i << ")" << endl;
+      pos++;
+    }
+  }
+  else
+    os << "<empty>" << endl;
+}
+
+void VM::dumpRegisters(ostream& os) const
+{
+  os << "IP: " << hex << IP << " (" << dec << IP-CB << ")" << endl;
+  os << "OP: " << hex << OP << " (" << dec << OP-OB << ")" << endl;
+}
+
+void VM::dumpStack(ostream& os) const
+{
+  if (OB != NULL && OP != NULL && OP >= OB) {
+    for (VMObj *op = OP; op >= OB; --op)
+      os << "0x" << hex << op[0].i
+	     << " (" << dec << op[0].i << ")" << endl;
+  }
+  else
+    os << "<empty>" << endl;
+}
+
+void VM::dumpCode(ostream& os, int *startIP) const
+{
+  if (startIP != NULL) {
+    for (int* ip = startIP; ip < CL-1 /* && *ip != HALT */; ip++)
+    {
+      switch(*ip) {
+        case HALT     : os << "HALT";     break;
+        case NOP      : os << "NOP";      break;
+        case ILOADG   : os << "ILOADG"    << " " << *(++ip); break;
+        case ISTOREG  : os << "ISTOREG"   << " " << *(++ip); break;
+        case IPUSHC   : os << "IPUSHC"    << " " << *(++ip); break;
+        case IPOP     : os << "IPOP";     break;
+        case ISWAP    : os << "ISWAP";    break;
+        case IDUP     : os << "IDUP";     break;
+        case IADD     : os << "IADD";     break;
+        case ISUB     : os << "ISUB";     break;
+        case IMULT    : os << "IMULT";    break;
+        case IDIV     : os << "IDIV";     break;
+        case IMOD     : os << "IMOD";     break;
+        case INEG     : os << "INEG";     break;
+        case IPRINT   : os << "IPRINT"    << " " << *(++ip); break;
+        default       : os << "unknown opcode 0x" << hex << *ip; break;
+      }
+      os << endl;
+    }
+  }
+  else
+    os << "<empty>" << endl;
+}
+
+void VM::dumpMem(ostream& os) const
+{
+  os << "Globals:"   << endl; dumpGlobals(os);   os << endl;
+  os << "Registers:" << endl; dumpRegisters(os); os << endl;
+  os << "Stack:"     << endl; dumpStack(os);     os << endl;
+  os << "Code:"      << endl; dumpCode(os, IP);  os << endl;
+}
+
+/*
+ * operations
+ */
+void VM::disassemble(ostream& os) const
+{
+  os << "// Code:" << endl
+     << "GLOBALS " << GL-GB << endl;
+  dumpCode(os, CB);
+  os << endl;
+}
+
+
+/*
+ * VM instruction handlers
+ */
 
 // globals
-void VM::getglobal()
+inline void VM::loadGlobal()
 {
-  if (TS+1 >= SL)
-    throw StackOverflowError();
+  if (OP+1 >= OL)
+    throw StackOverflowError(OP, OP-OB);
   if (IP[1] < 0 || IP[1] >= GL-GB)
-    throw UndefinedGlobalError();
+    throw UndefinedGlobalError(IP[1]);
 
-  TS[1] = GB[ IP[1] ];
-  TS++; IP++;
+  OP[1] = GB[ IP[1] ];
+  OP++; IP++;
 }
 
-void VM::setglobal()
+inline void VM::storeGlobal()
 {
-  if (TS < SB)
-    throw new StackUnderflowError();
+  if (OP < OB)
+    throw new StackUnderflowError(OP, OP-OB);
   if (IP[1] < 0 || IP[1] >= GL-GB)
-    throw UndefinedGlobalError();
+    throw UndefinedGlobalError(IP[1]);
 
-  GB[ IP[1] ] = TS[0];
-  TS--; IP++;
+  GB[ IP[1] ] = OP[0];
+  OP--; IP++;
 }
 
 // stack manipulation
 inline void VM::pushc()
 {
-  if (TS+1 >= SL)
-    throw StackOverflowError();
+  if (OP+1 >= OL)
+    throw StackOverflowError(OP, OP-OB);
 
-  TS[1].i = IP[1];
-  TS++; IP++;
+  OP[1].i = IP[1];
+  OP++; IP++;
 }
 
 inline void VM::pop()
 {
-  if (TS < SB)
-    throw StackUnderflowError();
+  if (OP < OB)
+    throw StackUnderflowError(OP, OP-OB);
 
-  TS--;
+  OP--;
 }
 
 inline void VM::swap()
 {
-  if (TS < SB)
-    throw StackUnderflowError();
+  if (OP < OB)
+    throw StackUnderflowError(OP, OP-OB);
 
-  VMObj temp = TS[-1];
-  TS[-1] = TS[0];
-  TS[0] = temp;
+  VMObj temp = OP[-1];
+  OP[-1] = OP[0];
+  OP[0] = temp;
 }
 
 inline void VM::dup()
 {
-  if (TS+1 >= SL)
-    throw StackOverflowError();
+  if (OP+1 >= OL)
+    throw StackOverflowError(OP, OP-OB);
 
-  TS[1] = TS[0];
-  TS++;
+  OP[1] = OP[0];
+  OP++;
 }
 
 // expression evaluation
 inline void VM::binop()
 {
-  if (TS-1 < SB)
-    throw StackUnderflowError();
+  if (OP-1 < OB)
+    throw StackUnderflowError(OP, OP-OB);
 
   switch (*IP) {
-  case IADD : TS[-1].i = TS[-1].i +  TS[0].i; break;
-  case ISUB : TS[-1].i = TS[-1].i -  TS[0].i; break;
-  case IMULT: TS[-1].i = TS[-1].i *  TS[0].i; break;
-  case IDIV : TS[-1].i = TS[-1].i /  TS[0].i; break;
-  case IMOD : TS[-1].i = TS[-1].i %  TS[0].i; break;
+  case IADD  : OP[-1].i = OP[-1].i +  OP[0].i; break;
+  case ISUB  : OP[-1].i = OP[-1].i -  OP[0].i; break;
+  case IMULT : OP[-1].i = OP[-1].i *  OP[0].i; break;
+  case IDIV  : OP[-1].i = OP[-1].i /  OP[0].i; break;
+  case IMOD  : OP[-1].i = OP[-1].i %  OP[0].i; break;
   }
 
-  TS--;
+  OP--;
 }
 
 inline void VM::unop()
 {
-  if (TS < SB)
-    throw StackUnderflowError();
+  if (OP < OB)
+    throw StackUnderflowError(OP, OP-OB);
 
   switch (*IP) {
-  case INEG : TS[0].i = -TS[0].i; break;
+  case INEG : OP[0].i = -OP[0].i; break;
   }
 }
 
-// builtin functions
 inline void VM::print()
 {
-  if (TS < SB)
-    throw StackUnderflowError();
-  int nrExps = TS[0].i;
-  if (TS - nrExps < SB)
-    throw StackUnderflowError();
+  int nrExps = *(++IP);
+  if (OP - (nrExps-1) < OB)
+    throw StackUnderflowError(OP, OP-OB);
+  
+  for (int sp = nrExps-1; sp > 0; --sp)
+    cout << OP[-sp].i << ", ";
+  cout << OP[0].i << endl;
 
-  for (int sp = nrExps; sp > 1; --sp)
-    cout << TS[-sp].i << ", ";
-  cout << TS[-1].i << endl;
-
-  TS -= nrExps + 1;
+  OP -= nrExps;
 }
 
-int VM::run()
+void VM::execCode()
 {
-  if (includeDump)
-    dumpCode();
-
-  for (IP = CB; IP < CL && *IP != HALT; IP++)
+  for (IP = CB; *IP != HALT; IP++)
   {
     switch(*IP) {
-    case NOP     :              break;
-    case IGETGLBL: getglobal(); break;
-    case ISETGLBL: setglobal(); break;
-    case IPUSHC  : pushc();     break;
-    case IPOP    : pop();       break;
-    case ISWAP   : swap();      break;
-    case IDUP    : dup();       break;
-    case IPRINT  : print();     break;
+    case NOP     :                break;
+    case ILOADG  : loadGlobal();  break;
+    case ISTOREG : storeGlobal(); break;
+    case IPUSHC  : pushc();       break;
+    case IPOP    : pop();         break;
+    case ISWAP   : swap();        break;
+    case IDUP    : dup();         break;
+    case IPRINT  : print();       break;
     default:
-      if      (IADD <= *IP && *IP <= IMOD)   binop();
-      else if (INEG <= *IP && *IP <= INEG)   unop();
-      else
-    	  throw InvalidInstrError();
+      if      (IADD <= *IP && *IP <= IMOD)    binop();
+      else if (INEG <= *IP && *IP <= INEG)    unop();
+      else throw InvalidInstrError(*IP);
+
       break;
     }
   }
-
-  if (TS >= SB) {
-    cerr << "Warning: unused elements left on stack" << endl;
-    for (; TS >= SB; --TS)
-      cerr << hex << TS[0].i << endl;
-  }
-
-  return 0;
-}
-
-void VM::dumpCode()
-{
-  cerr << "Code dump:" << endl;
-
-  for (IP = CB; IP < CL && *IP != HALT; IP++)
-  {
-    switch(*IP) {
-      case HALT     : cerr << "HALT";     break;
-      case NOP      : cerr << "NOP";      break;
-      case IGETGLBL : cerr << "IGETGLBL" << " " << *(++IP);; break;
-      case ISETGLBL : cerr << "ISETGLBL" << " " << *(++IP);; break;
-      case IPUSHC   : cerr << "IPUSHC"   << " " << *(++IP);  break;
-      case IPOP     : cerr << "IPOP";     break;
-      case ISWAP    : cerr << "ISWAP";    break;
-      case IDUP     : cerr << "IDUP";     break;
-      case IADD     : cerr << "IADD";     break;
-      case ISUB     : cerr << "ISUB";     break;
-      case IMULT    : cerr << "IMULT";    break;
-      case IDIV     : cerr << "IDIV";     break;
-      case IMOD     : cerr << "IMOD";     break;
-      case INEG     : cerr << "INEG";     break;
-      case IPRINT   : cerr << "IPRINT";   break;
-      default       : cerr << "unknown opcode 0x" << hex << *IP; break;
-    }
-    cerr << endl;
-  }
-
-  cerr << endl;
 }

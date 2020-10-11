@@ -10,6 +10,7 @@ Group is
 
 absyn.sml
 compiler.sml
+test.sml
 
 $/basis.cm
 $/smlnj-lib.cm

@@ -1,0 +1,105 @@
+<project name="vm-comp" basedir="." default="test">
+
+	
+  <!-- scala/scalac setup -->
+  <property environment="env" />
+  <property name="scala.home" value="${env.SCALA_HOME}" />
+  
+  <!-- 'scalac' hack due to removal of ant support in scala 2.13 -->
+  <target name="scalac">
+    <exec executable="scalac" failonerror="true">
+      <arg line="-cp ${scalac:lib.dir} " />
+      <arg line="-d ${scalac:build.dir}" />
+      <arg line="${scalac:files}" />
+    	<arg line="-deprecation" />
+    </exec>
+  </target>
+  <target name="scala">
+    <exec executable="scala" failonerror="true">
+      <arg line="-cp ${scala:lib.dir} " />
+      <arg line="-d ${scala:build.dir}" />
+      <arg line="${scala:files}" />
+      <arg line="-deprecation" />
+    </exec>
+  </target>
+	
+	<!-- build properties -->
+  <property name="class.name" value="SLP" />  
+  <property name="sources.dir" value="." />
+  <property name="build.dir" value="classes" />
+  <property name="prog.name" value="vm-comp" />  
+  <property name="test.dir" value="../../test" />
+
+	
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${build.dir}"/>
+  </target>
+	
+	
+  <target name="compile" depends="init">
+  	<!-- ant support was removed in scala 2.13
+    <scalac srcdir="${sources.dir}"
+            destdir="${build.dir}"
+            classpathref="build.classpath"
+            deprecation="on">
+      <include name="${scala-source.dir}/**/*.scala" />
+    </scalac>
+    -->
+    <pathconvert property="compile:files" pathsep=" ">
+        <fileset dir="${sources.dir}">
+            <include name="**/*.scala"/>
+            <exclude name="**/test*"/>
+        </fileset>
+    </pathconvert>
+    <antcall target="scalac">
+    	<param name="scalac:lib.dir" value="${build.dir}" />
+    	<param name="scalac:build.dir" value="'${build.dir}'" />
+      <param name="scalac:files" value="${compile:files}"/>
+    </antcall>
+  </target>
+	
+	
+  <target name="test" depends="compile">
+    <!-- ant support was removed in scala 2.13
+    <scalac srcdir="${sources.dir}"
+            destdir="${build.dir}"
+            classpathref="build.classpath"
+            deprecation="on">
+      <include name="${scala-source.dir}/**/*.scala" />
+    </scalac>
+    -->
+    <pathconvert property="test:files" pathsep=" ">
+        <fileset dir="${sources.dir}">
+            <include name="**/test*.scala"/>
+        </fileset>
+    </pathconvert>
+    <antcall target="scalac">
+      <param name="scalac:lib.dir" value="${build.dir}" />
+      <param name="scalac:build.dir" value="'${build.dir}'" />
+      <param name="scalac:files" value="${test:files}"/>
+    </antcall>
+    <antcall target="scala">
+      <param name="scala:lib.dir" value="${build.dir}" />
+      <param name="scala:build.dir" value="'${build.dir}'" />
+      <param name="scala:files" value="Test"/>
+    </antcall>  	
+  </target>
+	
+	
+  <target name="clean">
+    <delete dir="${build.dir}" quiet="true"/>
+
+    <delete>
+      <fileset dir="${sources.dir}"
+          excludes="${class.name}.scala ${class.name}.java ${class.name}.g4"
+          includes="${class.name}*"/>
+    </delete>
+    
+  	<!--
+    <delete>
+      <fileset dir="${test.dir}" includes="test.vm" />
+    </delete> -->
+  </target>
+	
+</project>

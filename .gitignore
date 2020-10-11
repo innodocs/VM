@@ -1,0 +1,5 @@
+# ignore sml compilation manager files
+**/.cm
+
+# ignore eclipse workspace files
+**/.metadata

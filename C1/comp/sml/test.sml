@@ -1,13 +1,15 @@
 (*
 **  test.sml
-**  vm
+**  vm-comp
 **
 **  Created by Ovidiu Podisor on 01/30/19.
 **  Copyright © 2019 innodocs. All rights reserved.
 *)
 
+structure Test = struct
+
 local
-   open Absyn
+  open Absyn
 in
 
 val prog1 = 
@@ -93,5 +95,20 @@ val prog3 =
 	          NumExp 8)))),
 	 PrintStm[
         IdExp "a"])
-
+     
+fun run() = let
+  val progs = [(prog1, "prog1"), (prog2, "prog2"), (prog3, "prog3")]
+in
+  map (fn p => let val fp = "../../test/" ^ (#2 p) in
+         (print ("\n" ^ (#2 p) ^ ":\n");
+          Comp.print (#1 p);
+          Comp.eval (#1 p);
+          Comp.compile (#1 p) (fp ^ ".vm");
+          print("--------------\n"))
+        end)
+      progs; 
+  ()
 end
+
+end (* local *)
+end (* Test *)

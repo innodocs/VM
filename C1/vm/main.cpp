@@ -10,57 +10,89 @@
 #include <iostream>
 using namespace std;
 
-#include "vm.h"
+#include "VM.h"
 
 void usage()
 {
   cerr <<
-      "usage: vm [options] prog\n"
+      "Usage: vm [options] prog\n"
       "\n"
       "options:\n"
+      "\t-v               version\n"
       "\t-s <stacksize>   set stack size of VM (in MB)\n"
-      "\t-v               verbose\n"
-      "\t-d               dump code\n"
-      "\t-h               show this help\n";
-  exit(1);
+      "\t-w               show warnings\n"
+      "\t-d               disassemble\n"
+	  "\t-m               dump VM memory on exit\n"
+      "\t-h               show this help\n\n";
 }
 
 int main(int argc, char* const argv[])
 {
-  unsigned long stackSize = 1024*1024L;
-  bool isVerbose = false;
-  bool dumpCode = false;
+  VM::Options options;
+  options.warn = false;
+  options.disassemble = false;
+  options.dumpMem = false;
+  options.stackSize = 1024;
 
   int ch;
-  while ((ch = getopt(argc, argv, "hvds:")) != -1)
+  while ((ch = getopt(argc, argv, "hvwdms:")) != -1)
   {
     switch (ch) {
     case 's':
-      stackSize = strtol(optarg, NULL, 10);
-      if (stackSize == 0)
+      options.stackSize = (int)strtol(optarg, NULL, 10);
+      if (options.stackSize == 0)
           usage();
-      stackSize *= 1024;
       break;
-
-    case 'v':
-      isVerbose = true;
+        
+    case 'w':
+      options.warn = true;
       break;
 
     case 'd':
-      dumpCode = true;
+      options.disassemble = true;
       break;
 
+    case 'm':
+      options.dumpMem = true;
+      break;
+
+    case 'v':
+      cout << VM::version() << endl;
+      return 0;
+
     case '?': case 'h':
-    default:
       usage();
+      return 0;
+
+    default:
+      cerr << "bad option -" << ch << endl << endl;
+      usage();
+      return 1;
     }
   }
   argc -= optind;
   argv += optind;
-
-  if (argc < 1)
+  if (argc < 1) {
     usage();
+    return 1;
+  }
 
-  VM vm(argv[0], stackSize, isVerbose, dumpCode);
-  vm.run();
+  VM vm(argv[0], options);
+  try {
+    vm.run();
+
+    if (options.dumpMem) {
+      cerr << endl;
+      vm.dumpMem(cerr);
+    }
+    return 0;
+  }
+  catch (VM::VMError const& vme) {
+    cerr << "VM Error " << vme.what() << endl;
+    if (options.dumpMem || options.warn) {
+      cerr << endl;
+      vm.dumpMem(cerr);
+    }
+    return 1;
+  }
 }
