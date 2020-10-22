@@ -1,0 +1,9 @@
+//
+// vm-asm 1.2
+//
+GLOBALS 1
+IPUSHC 5
+ISTOREG 0
+ILOADG 0
+IPRINT 1
+HALT
