@@ -1,5 +1,5 @@
 /*
-**  VMAssembler
+**  VMAssembler.scala
 **  vm-asm
 **
 **  Created by Ovidiu Podisor on 03/30/20.
@@ -88,8 +88,6 @@ object VMAssembler {
   private object OpCodeStream {
 
     val stream = new ArrayBuffer[Int](100)
-    val GLOBALS_POS = 4
-    val STRINGS_POS = 5
 
     def offset: Int = stream.length
 
@@ -117,14 +115,14 @@ object VMAssembler {
       while (i < strLen-1) {
         if (str(i) == '\\') {
           sb += (str(i + 1) match {
-            case '\\' => '\\'
+            case '\\'=> '\\'
             case '"' => '"'
             case 'b' => '\b'
             case 'f' => '\f'
             case 'n' => '\n'
             case 'r' => '\r'
             case 't' => '\t'
-            case _ => str(i + 1)
+            case _   => str(i + 1)
           })
           i += 2
         }
@@ -147,11 +145,13 @@ object VMAssembler {
     def close(): Unit = {
       try {
         if (declGlobals >= 0 && declGlobals != nrGlobals)
-          error(s"error: $declGlobals GLOBALS declared but $nrGlobals found, please correct\n" +
-            s"       (or simply remove the declaration and $progName will compute if for you)")
+          error(
+            s"""error: $declGlobals GLOBALS declared but $nrGlobals found, please correct
+               |       (or simply remove the declaration and $progName will compute if for you)""".stripMargin)
         if (declStrings >= 0 && declStrings != nrStrings)
-          error(s"error: $declStrings STRINGS declared but $nrStrings found, please correct\n" +
-            s"       (or simply remove the declaration and $progName will compute if for you)")
+          error(
+            s"""error: $declStrings STRINGS declared but $nrStrings found, please correct
+               |       (or simply remove the declaration and $progName will compute if for you)""".stripMargin)
 
         // file header
         out.writeInt(MAGIC)
@@ -407,17 +407,16 @@ object VMAssembler {
 
   def usage(os: PrintStream): Unit = {
     os.print(
-      s"""Usage: $progName [options] asm-file vm-file\n
-          \n
-          options:\n
-          \t-v               version\n
-          \t-h               show this help\n
-          \n"""
+      s"""Usage: $progName [options] <asm-file> <vm-file>
+         |
+         |options:
+         | -v        version
+         | -h        show this help\n""".stripMargin
     )
   }
 
   def version(): String = {
     s"VM assembler version $MAJOR_VERSION.$MINOR_VERSION" +
-      " -- Copyright 2002-2020, InnoDocs & Innovative Systems, Inc."
+     " -- Copyright 2002-2020, InnoDocs & Innovative Systems, Inc."
   }
 }

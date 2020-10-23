@@ -155,7 +155,7 @@ void VM::loadCode(const char *codeFileName)
       while ((str-emptyStr-1) < stringPoolSize) {
 
         if (pos >= nrStrings)
-          throw CorruptStringPoolError(nrStrings, pos);
+          throw BadStringPoolError(nrStrings, pos);
         SPB[pos] = str;
 
         int strLen = readByte(cfi);
@@ -171,6 +171,7 @@ void VM::loadCode(const char *codeFileName)
   if (options.warn || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "Strings: " << nrStrings << endl;
 
+  // code
   uintmax_t codeSize = fileSize - filePos;
   if (options.warn || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "Code size: " << codeSize << endl;
@@ -190,6 +191,9 @@ void VM::loadCode(const char *codeFileName)
   // end buffer w/ 'HALT' sentinel, just in case compiler missed it
   CB[pos++] = HALT;
   //CB[pos++] = HALT;
+
+  if (options.warn || options.disassemble)
+    cout << endl;
 }
 
 
@@ -222,9 +226,35 @@ void VM::dumpGlobals(ostream& os) const
 {
   if (GB != NULL && GL != NULL && GB < GL) {
     int pos = 0;
-    for (VMObj *gp = GB; gp < GL; gp++) {
+    for (VMObj* gp = GB; gp < GL; gp++) {
       os << pos << ": 0x" << hex << gp[0].i
     		    << " ("   << dec << gp[0].i << ")" << endl;
+      pos++;
+    }
+  }
+  else
+    os << "<empty>" << endl;
+}
+
+void VM::dumpStrings(ostream& os) const
+{
+  if (SPB != NULL && SPL != NULL && SPB < SPL) {
+    int pos = 0;
+    for (char** spp = SPB; spp < SPL; spp++) {
+      os << pos << ": \"";
+      for (char *s = spp[0]; *s != '\0'; s++) {
+        switch(*s) {
+        case '\\': os << "\\\\";  break;
+        case '\"' : os << "\\\"";  break;
+        case '\b' : os << "\\b";   break;
+        case '\f' : os << "\\f";  break;
+        case '\n' : os << "\\n";  break;
+        case '\r' : os << "\\r";  break;
+        case '\t' : os << "\\t"; break;
+        default  : os << *s;  break;
+        }
+      }
+      os << "\"" << endl;
       pos++;
     }
   }
@@ -243,7 +273,7 @@ void VM::dumpStack(ostream& os) const
   if (OB != NULL && OP != NULL && OP >= OB) {
     for (VMObj *op = OP; op >= OB; --op)
       os << "0x" << hex << op[0].i
-	     << " (" << dec << op[0].i << ")" << endl;
+         << " (" << dec << op[0].i << ")" << endl;
   }
   else
     os << "<empty>" << endl;
@@ -304,6 +334,7 @@ void VM::dumpCode(ostream& os, int *startIP) const
 void VM::dumpMem(ostream& os) const
 {
   os << "Globals:"   << endl; dumpGlobals(os);   os << endl;
+  os << "Strings:"   << endl; dumpStrings(os);   os << endl;
   os << "Registers:" << endl; dumpRegisters(os); os << endl;
   os << "Stack:"     << endl; dumpStack(os);     os << endl;
   os << "Code:"      << endl; dumpCode(os, IP);  os << endl;
@@ -499,7 +530,7 @@ void VM::execCode()
     case ISWAP   : swap();        break;
     case IDUP    : dup();         break;
     case GOTO    : branch();      break;
-    case IPRINT  : print();       break;
+    case IPRINT  :
     case SPRINT  : print();       break;
     default:
       if      (GOTO <  *IP && *IP <= IF_INE)  branchIf();

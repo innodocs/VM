@@ -174,7 +174,7 @@ public: // VM errors
   };
   
   using InvalidCodeFileError    = VMErrorT<_vm_ts("InvalidCodeFileError"), const char*>;
-  using CorruptStringPoolError  = VMErrorT<_vm_ts("CorruptStringPoolError"), int, int>;
+  using BadStringPoolError      = VMErrorT<_vm_ts("BadStringPoolError"), int, int>;
   using UnsupportedVersionError = VMErrorT<_vm_ts("UnsupportedVersionError"), int, int>;
   using MemoryError             = VMErrorT<_vm_ts("MemoryError")>;
   using StackOverflowError      = VMErrorT<_vm_ts("StackOverflowError"), VMObj*, int>;
@@ -188,6 +188,7 @@ public: // memory dump, debugging
   void dumpMem(ostream& os) const;
 protected:
   void dumpGlobals(ostream& os) const;
+  void dumpStrings(ostream& os) const;
   void dumpRegisters(ostream& os) const;
   void dumpStack(ostream& os) const;
   void dumpCode(ostream& os, int *startIP = NULL) const;

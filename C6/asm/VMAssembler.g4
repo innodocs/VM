@@ -1,3 +1,10 @@
+/*
+**  VMAssembler.g4
+**  vm-asm
+**
+**  Created by Ovidiu Podisor on 03/30/20.
+**  Copyright © 2020 innodocs. All rights reserved.
+*/
 grammar VMAssembler;
 
 /*

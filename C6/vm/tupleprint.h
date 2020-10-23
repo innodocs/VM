@@ -9,7 +9,6 @@
 #ifndef TUPLEPRINT_h
 #define TUPLEPRINT_h
 
-
 template <class... TArgs>
 std::ostream& operator<<(std::ostream& os, std::tuple<TArgs...> const& t) {
 
@@ -17,7 +16,7 @@ std::ostream& operator<<(std::ostream& os, std::tuple<TArgs...> const& t) {
   std::apply([&os, &first](auto&&... args) {
     auto print = [&] (auto&& val) {
       if (!first)
-        os << " ,";
+        os << ", ";
       (os << val);
       first = false;
     };
@@ -26,6 +25,5 @@ std::ostream& operator<<(std::ostream& os, std::tuple<TArgs...> const& t) {
 
   return os;
 }
-
 
 #endif /* TUPLEPRINT_h */
