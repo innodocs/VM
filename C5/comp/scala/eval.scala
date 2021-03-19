@@ -76,6 +76,15 @@ val eval : Absyn.Stm => Eval.Env = prog => {
       newEnv
     }
 
+    case A.RepeatStm(tst, b, _) => {
+      var (v, newEnv) = (0, env)
+      do {
+        val (tstV, tstEnv) = evalExp(tst, evalStm(b, newEnv))
+        v = tstV; newEnv = tstEnv
+      } while (v == 0)
+      newEnv
+    }
+
     case A.ForStm(A.SimpleVar(id, _), rangeExp, b, _) => {
       val (startExp, endExp) = rangeExp match {
         case A.RangeExp(startExp, endExp, _) => (startExp, endExp)
@@ -88,15 +97,6 @@ val eval : Absyn.Stm => Eval.Env = prog => {
         v = v + 1
         newEnv = (id, v) :: evalStm(b, newEnv)
       }
-      newEnv
-    }
-
-    case A.RepeatStm(tst, b, _) => {
-      var (v, newEnv) = (0, env)
-      do {
-        val (tstV, tstEnv) = evalExp(tst, evalStm(b, newEnv))
-        v = tstV; newEnv = tstEnv
-      } while (v == 0)
       newEnv
     }
 

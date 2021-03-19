@@ -16,7 +16,7 @@
   <!-- antlr setup -->
   <property environment="env" />
   <property name="antlr.home" value="${env.ANTLR_HOME}" />
-  <property name="antlr" location="${antlr.home}/antlr-4.8-complete.jar" />
+  <property name="antlr" location="${env.ANTLR_CLASSPATH}" />
   <path id="antlr">
     <pathelement path="${antlr}"/>
   </path>

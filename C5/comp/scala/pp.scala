@@ -26,12 +26,6 @@ sealed trait PRETTYPRINT_SIG {
 
 /*
 structure PrettyPrint : PRETTYPRINT
-    val print : Absyn.stm -> unit
-
-    val printString: string -> unit
-    val printInt: int -> unit
-    val printNL: unit -> unit
-  end
 */
 object PrettyPrint extends PRETTYPRINT_SIG {
   val print = PrettyPrintImp.print

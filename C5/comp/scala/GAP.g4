@@ -34,7 +34,7 @@ exps returns [/* List[Absyn.Exp] */Object ast]
    ;
 
 exp returns [/* Absyn.Exp */Object ast]
-   : exp POW<assoc=right> exp     # BinOpExp
+   : <assoc=right> exp POW exp    # BinOpExp
    | (PLUS | MINUS) exp           # UnOpExp
    | exp (TIMES | DIV | MOD) exp  # BinOpExp
    | exp (PLUS | MINUS) exp       # BinOpExp

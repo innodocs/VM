@@ -53,6 +53,7 @@ object Absyn {
            | NumExp of int * pos
   	       | BinOpExp of exp * binop * exp * pos
   	       | UnOpExp of exp * unop * exp * pos
+  	       | RangeExp of exp * exp * pos
   */
   sealed abstract class Exp
   case class VarExp(v: Var) extends Exp
@@ -64,11 +65,11 @@ object Absyn {
   /*
 	 and stm = EmptyStm of pos
            | ExpStm of exp
-	         | SeqStm of stm list
-	         | IfStm of exp * stm * stm option * pos
-	         | WhileStm of exp * stm * pos
-	         | ForStm of var * exp * stm * pos
-	         | RepeatStm of exp * stm * pos
+           | SeqStm of stm list
+           | IfStm of exp * stm * stm option * pos
+           | WhileStm of exp * stm * pos
+           | ForStm of var * exp * stm * pos
+           | RepeatStm of exp * stm * pos
            | AssignStm of var * exp * pos
            | PrintStm of exp list * pos
   */
@@ -82,5 +83,4 @@ object Absyn {
   case class RepeatStm(test: Exp, body: Stm, pos: Pos = 0) extends Stm
   case class AssignStm(v: Var, exp: Exp, pos: Pos = 0) extends Stm
   case class PrintStm(exps: List[Exp], pos: Pos = 0) extends Stm
-
 }

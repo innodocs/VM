@@ -84,7 +84,7 @@ void VM::loadCode(const char *codeFileName)
   error_code ec;
   fileSize = filesystem::file_size(filesystem::path(codeFileName), ec);
   if (fileSize == static_cast<std::uintmax_t>(-1))
-	  throw InvalidCodeFileError(codeFileName);
+    throw InvalidCodeFileError(codeFileName);
   if (options.warn || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "File size: " << fileSize << endl;
 
@@ -132,8 +132,7 @@ void VM::loadCode(const char *codeFileName)
   CL = CB + (codeSize+sizeof(int)-1)/sizeof(int) + 1;
 
   int pos = 0;
-  while (filePos + 4 <= fileSize)
-  {
+  while (filePos + 4 <= fileSize) {
     int instr = readInt(cfi);
     CB[pos++] = instr;
   }
@@ -194,7 +193,7 @@ void VM::dumpStack(ostream& os) const
   if (OB != NULL && OP != NULL && OP >= OB) {
     for (VMObj *op = OP; op >= OB; --op)
       os << "0x" << hex << op[0].i
-	     << " (" << dec << op[0].i << ")" << endl;
+         << " (" << dec << op[0].i << ")" << endl;
   }
   else
     os << "<empty>" << endl;
