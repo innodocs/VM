@@ -2,8 +2,8 @@
 //  main.cpp
 //  vm
 //
-//  Created by Ovidiu Podisor on 03/30/19.
-//  Copyright © 2019 innodocs. All rights reserved.
+//  Created by Ovidiu Podisor on 04/12/19.
+//  Copyright © 2019-2021 innodocs. All rights reserved.
 //
 
 #include <unistd.h>
@@ -22,7 +22,8 @@ void usage()
       "\t-s <stacksize>   set stack size of VM (in MB)\n"
       "\t-w               show warnings\n"
       "\t-d               disassemble\n"
-	  "\t-m               dump VM memory on exit\n"
+      "\t-m               dump VM memory on exit\n"
+	  "\t-t               time execution\n"
       "\t-h               show this help\n\n";
 }
 
@@ -32,18 +33,19 @@ int main(int argc, char* const argv[])
   options.warn = false;
   options.disassemble = false;
   options.dumpMem = false;
+  options.time = false;
   options.stackSize = 1024;
 
   int ch;
-  while ((ch = getopt(argc, argv, "hvwdms:")) != -1)
+  while ((ch = getopt(argc, argv, "hvwdmts:")) != -1)
   {
     switch (ch) {
     case 's':
       options.stackSize = (int)strtol(optarg, NULL, 10);
       if (options.stackSize == 0)
-          usage();
+        usage();
       break;
-        
+
     case 'w':
       options.warn = true;
       break;
@@ -54,6 +56,10 @@ int main(int argc, char* const argv[])
 
     case 'm':
       options.dumpMem = true;
+      break;
+
+    case 't':
+      options.time = true;
       break;
 
     case 'v':

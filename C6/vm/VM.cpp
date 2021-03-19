@@ -2,8 +2,8 @@
 //  VM.cpp
 //  vm
 //
-//  Created by Ovidiu Podisor on 03/30/19.
-//  Copyright © 2019 innodocs. All rights reserved.
+//  Created by Ovidiu Podisor on 04/12/19.
+//  Copyright © 2019-2021 innodocs. All rights reserved.
 //
 
 #include <iostream>
@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <functional>
 #include <math.h>
+#include <time.h>
 using namespace std;
 
 #include "VM.h"
@@ -21,7 +22,7 @@ const char* VM::version() noexcept
 {
   static char VM_version[128];
   sprintf(VM_version,
-    "VM code runner version %d.%d -- Copyright 2002-2020, InnoDocs & Innovative Systems, Inc.",
+    "VM code runner version %d.%d -- Copyright 2002-2021, InnoDocs & Innovative Systems, Inc.",
 	MAJOR_VERSION, MINOR_VERSION);
 
   return VM_version;
@@ -90,7 +91,7 @@ void VM::loadCode(const char *codeFileName)
   error_code ec;
   fileSize = filesystem::file_size(filesystem::path(codeFileName), ec);
   if (fileSize == static_cast<std::uintmax_t>(-1))
-	  throw InvalidCodeFileError(codeFileName);
+    throw InvalidCodeFileError(codeFileName);
   if (options.warn || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "File size: " << fileSize << endl;
 
@@ -182,8 +183,7 @@ void VM::loadCode(const char *codeFileName)
   CL = CB + (codeSize+sizeof(int)-1)/sizeof(int) + 1;
 
   int pos = 0;
-  while (filePos + 4 <= fileSize)
-  {
+  while (filePos + 4 <= fileSize) {
     int instr = readInt(cfi);
     CB[pos++] = instr;
   }
@@ -209,7 +209,17 @@ void VM::run()
   if (options.disassemble)
     disassemble(cout);
   else {
+    clock_t startTime = 0;
+    if (options.time)
+      startTime = clock();
+
     execCode();
+
+    if (options.time) {
+      clock_t endTime = clock();
+      long double elapsedTime = (1000.0 * (endTime - startTime)) / CLOCKS_PER_SEC;
+      cout << endl << "Time: " << elapsedTime << " ms" << endl;
+    }
 
     if (OP >= OB) {
       cerr << "Warning: unused elements left on stack" << endl;
@@ -242,16 +252,16 @@ void VM::dumpStrings(ostream& os) const
     int pos = 0;
     for (char** spp = SPB; spp < SPL; spp++) {
       os << pos << ": \"";
-      for (char *s = spp[0]; *s != '\0'; s++) {
+      for (char* s = spp[0]; *s != '\0'; s++) {
         switch(*s) {
-        case '\\': os << "\\\\";  break;
-        case '\"' : os << "\\\"";  break;
-        case '\b' : os << "\\b";   break;
-        case '\f' : os << "\\f";  break;
-        case '\n' : os << "\\n";  break;
-        case '\r' : os << "\\r";  break;
-        case '\t' : os << "\\t"; break;
-        default  : os << *s;  break;
+        case '\\':  os << "\\\\"; break;
+        case '\"':  os << "\\\""; break;
+        case '\b':  os << "\\b";  break;
+        case '\f':  os << "\\f";  break;
+        case '\n':  os << "\\n";  break;
+        case '\r':  os << "\\r";  break;
+        case '\t':  os << "\\t";  break;
+        default  :  os << *s;     break;
         }
       }
       os << "\"" << endl;
@@ -534,10 +544,10 @@ void VM::execCode()
     case SPRINT  : print();       break;
     default:
       if      (GOTO <  *IP && *IP <= IF_INE)  branchIf();
-      else if (IADD <= *IP && *IP <= IPOW)    binop();
+      else if (IADD <= *IP && *IP <= IOR)     binop();
       else if (INEG <= *IP && *IP <= INOT)    unop();
       else
-    	  throw InvalidInstrError(*IP);
+        throw InvalidInstrError(*IP);
       break;
     }
   }

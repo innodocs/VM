@@ -1,9 +1,9 @@
 //
-//  VM.hpp
+//  VM.h
 //  vm
 //
-//  Created by Ovidiu Podisor on 03/30/19.
-//  Copyright © 2019 innodocs. All rights reserved.
+//  Created by Ovidiu Podisor on 04/12/19.
+//  Copyright © 2019-2021 innodocs. All rights reserved.
 //
 
 #ifndef VM_h
@@ -93,6 +93,7 @@ public: // construction
     bool    warn        : 1;
     bool    disassemble : 1;
     bool    dumpMem     : 1;
+    bool    time        : 1;
   };
   
   VM(const char* codeFileName, Options options) noexcept;
@@ -164,7 +165,7 @@ public: // VM errors
     protected: VMError(const char *tid) : runtime_error(tid) {}
   };
   template<typename TS, typename ...TArgs> struct VMErrorT : public VMError {
-	tuple<const TArgs...> args;
+    tuple<const TArgs...> args;
     VMErrorT(const TArgs&... _args) : VMError(TS::data()), args(_args...) {}
     const char* what() const noexcept {
       static string s;

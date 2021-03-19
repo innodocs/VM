@@ -2,8 +2,8 @@
 **  VMAssembler.scala
 **  vm-asm
 **
-**  Created by Ovidiu Podisor on 03/30/20.
-**  Copyright © 2020 innodocs. All rights reserved.
+**  Created by Ovidiu Podisor on 04/12/20.
+**  Copyright © 2020-2021 innodocs. All rights reserved.
 */
 
 import java.io._
@@ -96,16 +96,16 @@ object VMAssembler {
 
     def update(offset: Int, newValue: Int): Unit = stream.update(offset, newValue)
 
-    var nrGlobals = 0   // how many globals found
-    var declGlobals = -1 // how many globals declared
+    var nrGlobals   = 0    // how many globals found
+    var declGlobals = -1   // how many globals declared
     def addGlobal(gIndex: Int): Int = {
       if (gIndex >= nrGlobals)
         nrGlobals = gIndex+1
       gIndex
     }
 
-    var nrStrings = 0   // how many string literals found
-    var declStrings = -1 // how many string literals declared
+    var nrStrings   = 0    // how many string literals found
+    var declStrings = -1   // how many string literals declared
     val stringPool = new HashMap[String, Int]
     def addString(str: String): Int = {
 
@@ -417,6 +417,6 @@ object VMAssembler {
 
   def version(): String = {
     s"VM assembler version $MAJOR_VERSION.$MINOR_VERSION" +
-     " -- Copyright 2002-2020, InnoDocs & Innovative Systems, Inc."
+     " -- Copyright 2002-2021, InnoDocs & Innovative Systems, Inc."
   }
 }
