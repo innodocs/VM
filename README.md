@@ -44,7 +44,7 @@ simple enough to build the various (sub)systems by hand.
 
 <h4>Building with Ant</h4>
 
-Define the`SCALA_HOME, ANTLR_HOME`and`ANTLR_CLASSPATH`environment variables, e.g.:
+Define the `SCALA_HOME`, `ANTLR_HOME` and `ANTLR_CLASSPATH` environment variables, e.g.:
 
         export SCALA_HOME="/usr/local/Cellar/scala/2.13.5/libexec/"
         export ANTLR_HOME="/usr/local/Cellar/antlr/4.9.2/"
@@ -55,8 +55,8 @@ Define the`SCALA_HOME, ANTLR_HOME`and`ANTLR_CLASSPATH`environment variables, e.g
 
 For each subsystem:
 
-* cd to sub-system folder `(vm, asm, comp/scala)`
-* run `ant:`
+* cd to sub-system folder (`vm`, `asm`, `comp/scala`)
+* run `ant`:
 
 Task | Command
 ------------ | -------------
@@ -64,8 +64,8 @@ to build the system | `ant`
 to build and test   | `ant test`
 to cleanup          | `ant clean`
 
-* if everything went OK, there will be`vm, vm-asm`and`vm-comp`binaries in
-  the`bin`folder. To test/run:
+* if everything went OK, there will be`vm`, `vm-asm` and `vm-comp` binaries in
+  the `bin` folder. To test/run:
   
       cd test
       ../bin/vm-asm asmtest.asm asmtest.vm
@@ -75,7 +75,7 @@ to cleanup          | `ant clean`
       ../bin/vm test4.vm
 
 
-For the`sml`build:
+For the `sml` build:
 
     cd comp/sml
     sml sources.cm
@@ -83,12 +83,9 @@ For the`sml`build:
 
 
 <h3>Bibliography</h3>
-[APPL1998]
-Andrew W. Appel, *Modern Compiler Implementation in ML*; 1998.
-(https://www.cs.princeton.edu/~appel/modern/ml/)
 
-[GAP2021]
-The GAP Group, *GAP -- Groups, Algorithms, and Programming, Version 4.11.1*; 2021.
-(https://www.gap-system.org)
+[APPL1998] Andrew W. Appel, *Modern Compiler Implementation in ML*; 1998. (https://www.cs.princeton.edu/~appel/modern/ml/)
+
+[GAP2021] The GAP Group, *GAP -- Groups, Algorithms, and Programming, Version 4.11.1*; 2021. (https://www.gap-system.org)
 
 
