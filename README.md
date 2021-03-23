@@ -18,7 +18,8 @@ lecture on language systems. The chapters are as follows:
 * C3: lexers/parsers for SLP (Antlr, ml-lex, ml-yacc)
 * C4: replace SLP w/ GAP language (Groups, Algorithms, and Programming [GAP2021]),
   implement 'if' and 'while' statements
-* C5: add 'for' and 'repeat' statements
+* C5: add 'for' and 'repeat' statements; move eval and pretty print code from
+  `compiler` file into separate files.
 * C6: add string type to compiler, add string pool, string constants, string printing to VM/Asm
 
 <h3>Directory Structure</h3>
@@ -37,8 +38,8 @@ Each chapter directory is structured in the same way:
 Given our goal of accessibility, we have attempted to make building
 and experimenting with the system as simple as possible. As
 such we have refrained from using build systems with involved
-directory structures, rules, learning curves, and have instead opted
-to place all required files in a single directory together with a
+folder structures, rules, learning curves, and have instead opted
+to place all required files in a single folder together with a
 simple ant build file. Even Ant is not required, as it is
 simple enough to build the various (sub)systems by hand.
 

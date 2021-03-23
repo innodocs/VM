@@ -146,4 +146,5 @@ fragment ID_LETTER: 'a'..'z'|'A'..'Z'|'_' ;
 NL      : '\r'? '\n';
 
 WS      : [ \t]+ ->  skip;
-COMMENT : '//' ~[\r\n]* '\r'? '\n' -> skip;
+COMMENT1: '//' ~[\r\n]* '\r'? '\n' -> skip;
+COMMENT2: '/*' (.)*? '*/' -> skip;
