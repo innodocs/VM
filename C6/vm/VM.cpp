@@ -90,7 +90,7 @@ void VM::loadCode(const char *codeFileName)
 {
   error_code ec;
   fileSize = filesystem::file_size(filesystem::path(codeFileName), ec);
-  if (fileSize == static_cast<std::uintmax_t>(-1))
+  if (fileSize == static_cast<std::uintmax_t>(-1) || fileSize == 0)
     throw InvalidCodeFileError(codeFileName);
   if (options.warn || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "File size: " << fileSize << endl;
@@ -238,7 +238,7 @@ void VM::dumpGlobals(ostream& os) const
     int pos = 0;
     for (VMObj* gp = GB; gp < GL; gp++) {
       os << pos << ": 0x" << hex << gp[0].i
-    		    << " ("   << dec << gp[0].i << ")" << endl;
+                << " ("   << dec << gp[0].i << ")" << endl;
       pos++;
     }
   }
