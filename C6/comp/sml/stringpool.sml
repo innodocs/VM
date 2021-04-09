@@ -93,8 +93,3 @@ struct
   end
 end
 
-(*
-print (">> " ^ str ^ " : " ^ Int.toString(!nextstring) ^ "\n")
-
-print (">> " ^ Int.toString(nrStrings) ^ ":" ^ Int.toString(n) ^ "\n");
-*)
