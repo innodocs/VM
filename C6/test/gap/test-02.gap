@@ -7,4 +7,7 @@
 
 a := 5;
 b := 3+2;
-Print(a, b);
+Print(
+  "a = ", a, " [expected: 5]\n",
+  "b = ", b, " [expected: 5]\n"
+);

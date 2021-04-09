@@ -6,4 +6,7 @@
 ##
 
 a := 5;
-Print(a);
+Print(
+  "a = ", a, " [expected: 5]\n"
+);
+

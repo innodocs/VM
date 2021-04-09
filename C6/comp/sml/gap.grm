@@ -1,0 +1,118 @@
+(*
+**  gap.grm
+**  vm-comp
+**
+**  Created by Ovidiu Podisor on 01/31/19.
+**  Copyright © 2019-2021 innodocs. All rights reserved.
+*)
+
+structure A = AbsynUtil
+structure S = Symbol
+
+
+fun flattenSeqStm(stm: A.stm, stms: A.stm) =
+  case stms of
+    A.SeqStm(lst) => A.SeqStm(stm :: lst)
+  | _             => A.SeqStm([stm, stms])
+
+%%
+%name GAP
+%verbose
+
+%term ASSIGN | LPAREN | RPAREN | COMMA | SEMICOLON
+    | LBRACK | RBRACK | DOTDOT
+    | PLUS | MINUS | TIMES | DIV | MOD | POW
+    | EQ | NEQ | LT | LE | GT | GE
+    | AND | OR | NOT
+    | IF | THEN | ELSE | FI
+    | WHILE | DO | OD
+    | FOR | IN
+    | REPEAT | UNTIL
+    | INT of int
+    | STRING of string
+    | ID of string | PRINT
+    | EOF
+      
+%nonterm  exp of A.exp
+        | exps of A.exp list
+        | rngExp of A.exp
+        | stm of A.stm
+        | stms of A.stm
+        | prog of A.stm
+
+
+%keyword  AND OR NOT
+          IF THEN ELSE FI
+          WHILE DO OD
+          FOR IN
+          REPEAT UNTIL
+  
+%right    SEMICOLON    
+
+%nonassoc EQ NEQ LT LE GT GE
+%nonassoc AND OR
+%nonassoc NOT
+%left     PLUS MINUS
+%left     TIMES DIV MOD
+%right    POW
+
+
+%start prog
+%eop EOF SEMICOLON
+%noshift EOF
+
+%pos int
+
+%value ID ("bogus")
+%value INT (1)
+
+%%
+
+prog
+  : stms                           (stms)
+
+stms
+  : stm SEMICOLON                  (stm)
+  | stm SEMICOLON stms             (flattenSeqStm(stm, stms))
+  | SEMICOLON                      (A.EmptyStm(SEMICOLONleft))
+  | SEMICOLON stms                 (flattenSeqStm(A.EmptyStm(SEMICOLONleft), stms))
+
+stm
+  : IF exp THEN stms FI            (A.IfStm(exp, stms, NONE, IFleft))
+  | IF exp THEN stms ELSE stms FI  (A.IfStm(exp, stms1, SOME(stms2), IFleft))
+  | WHILE exp DO stms OD           (A.WhileStm(exp, stms, WHILEleft))
+  | FOR ID IN rngExp DO stms OD    (A.ForStm(A.SimpleVar(S.symbol ID, IDleft), rngExp, stms, FORleft))
+  | REPEAT stms UNTIL exp          (A.RepeatStm(exp, stms, REPEATleft))
+  | ID ASSIGN exp                  (A.AssignStm(A.SimpleVar(S.symbol ID, IDleft), exp, IDleft))
+  | PRINT LPAREN exps RPAREN       (A.PrintStm(exps, PRINTleft))
+
+exps
+  : exp                            (exp :: nil)
+  | exp COMMA exps                 (exp :: exps)
+
+exp
+  : exp POW   exp  %prec POW       (A.BinOpExp(exp1, A.PowOp, exp2, exp1left))
+  | exp TIMES exp  %prec TIMES     (A.BinOpExp(exp1, A.TimesOp, exp2, exp1left))
+  | exp DIV   exp  %prec DIV       (A.BinOpExp(exp1, A.DivOp, exp2, exp1left))
+  | exp MOD   exp  %prec MOD       (A.BinOpExp(exp1, A.ModOp, exp2, exp1left))
+  | exp PLUS  exp  %prec PLUS      (A.BinOpExp(exp1, A.PlusOp, exp2, exp1left))
+  | exp MINUS exp  %prec MINUS     (A.BinOpExp(exp1, A.MinusOp, exp2, exp1left))
+
+  | exp EQ  exp    %prec EQ        (A.BinOpExp(exp1, A.EqOp, exp2, exp1left))
+  | exp NEQ exp    %prec NEQ       (A.BinOpExp(exp1, A.NeqOp, exp2, exp1left))
+  | exp LT  exp    %prec LT        (A.BinOpExp(exp1, A.LtOp, exp2, exp1left))
+  | exp LE  exp    %prec LE        (A.BinOpExp(exp1, A.LeOp, exp2, exp1left))
+  | exp GT  exp    %prec GT        (A.BinOpExp(exp1, A.GtOp, exp2, exp1left))
+  | exp GE  exp    %prec GE        (A.BinOpExp(exp1, A.GeOp, exp2, exp1left))
+
+  | NOT exp        %prec NOT       (A.UnOpExp(A.NotOp, exp, NOTleft))
+  | exp AND exp    %prec AND       (A.BinOpExp(exp1, A.AndOp, exp2, exp1left))
+  | exp OR  exp    %prec OR        (A.BinOpExp(exp1, A.OrOp, exp2, exp1left))
+
+  | LPAREN exp RPAREN              (exp)
+  | ID                             (A.VarExp(A.SimpleVar(S.symbol ID, IDleft)))
+  | INT                            (A.IntExp(INT, INTleft))
+  | STRING                         (A.StringExp(STRING, STRINGleft))
+
+rngExp
+   : LBRACK exp DOTDOT exp RBRACK  (A.RangeExp(exp1, exp2, exp1left))

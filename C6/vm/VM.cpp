@@ -12,9 +12,9 @@
 #include <filesystem>
 #include <functional>
 #include <math.h>
-#include <time.h>
 using namespace std;
 
+#include "instant.h"
 #include "VM.h"
 
 
@@ -92,7 +92,7 @@ void VM::loadCode(const char *codeFileName)
   fileSize = filesystem::file_size(filesystem::path(codeFileName), ec);
   if (fileSize == static_cast<std::uintmax_t>(-1) || fileSize == 0)
     throw InvalidCodeFileError(codeFileName);
-  if (options.warn || options.disassemble)
+  if (options.dumpMem || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "File size: " << fileSize << endl;
 
   ifstream cfs(codeFileName, ifstream::in|ifstream::binary);
@@ -127,7 +127,7 @@ void VM::loadCode(const char *codeFileName)
       throw MemoryError();
   }
   GL = GB + nrGlobals;
-  if (options.warn || options.disassemble)
+  if (options.dumpMem || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "Globals: " << nrGlobals << endl;
 
   // string pool
@@ -139,6 +139,7 @@ void VM::loadCode(const char *codeFileName)
     nrStrings = 0;
   if (nrStrings > 0) {
       int stringPoolSize = readInt(cfi);
+
       SPB = new char*[nrStrings +
                   ((stringPoolSize + 1)*sizeof(char) + sizeof(char*)-1)/sizeof(char*)];
       if (SPB == NULL)
@@ -154,12 +155,12 @@ void VM::loadCode(const char *codeFileName)
       char* str = emptyStr+1;
       int   pos = 0;
       while ((str-emptyStr-1) < stringPoolSize) {
-
         if (pos >= nrStrings)
           throw BadStringPoolError(nrStrings, pos);
         SPB[pos] = str;
 
         int strLen = readByte(cfi);
+        while (strLen == 0);
         for (int i = 0; i < strLen; i++)
           str[i] = readByte(cfi);
         str[strLen] = '\0';
@@ -167,14 +168,21 @@ void VM::loadCode(const char *codeFileName)
         str += strLen+1;
         pos += 1;
       }
+
+      // skip end padding
+      switch (stringPoolSize%4) {
+      case 1: readByte(cfi);
+      case 2: readByte(cfi);
+      case 3: readByte(cfi);
+      }
   }
   SPL = SPB + nrStrings;
-  if (options.warn || options.disassemble)
+  if (options.dumpMem || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "Strings: " << nrStrings << endl;
 
   // code
   uintmax_t codeSize = fileSize - filePos;
-  if (options.warn || options.disassemble)
+  if (options.dumpMem || options.disassemble)
     cout << (options.disassemble ? "// " : "") << "Code size: " << codeSize << endl;
 
   CB = new int[(codeSize+sizeof(int)-1)/sizeof(int) + 1];
@@ -209,16 +217,17 @@ void VM::run()
   if (options.disassemble)
     disassemble(cout);
   else {
-    clock_t startTime = 0;
+    Instant start;
     if (options.time)
-      startTime = clock();
+      start = Instant::now();
 
     execCode();
 
     if (options.time) {
-      clock_t endTime = clock();
-      long double elapsedTime = (1000.0 * (endTime - startTime)) / CLOCKS_PER_SEC;
-      cout << endl << "Time: " << elapsedTime << " ms" << endl;
+      Instant end = Instant::now();
+      cout << endl << "Total Time: "
+        << static_cast<double>(Duration::between(start, end).toNanos()) / 1000.0
+        << " ms" << endl;
     }
 
     if (OP >= OB) {

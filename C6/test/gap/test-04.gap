@@ -11,9 +11,9 @@
 a := 5+3;
 b := 4-2;
 if a < b then
-  Print(a);
+  Print(a, "\n");
 else
-  Print(b);
+  Print(b, "\n");
 fi;
 
 #
@@ -21,7 +21,7 @@ fi;
 #
 for i in [1 .. 10] do
   if i mod 2 = 0 then
-    Print(i);
+    Print(i, "\n");
   fi;
 od;
 
@@ -31,7 +31,7 @@ od;
 c := 1;
 while c <= 10 do
   if c mod 2 = 0 then
-    Print(c);
+    Print(c, "\n");
   fi;
   c := c + 1;
 od;
@@ -42,7 +42,7 @@ od;
 c := 1;
 repeat
   if c mod 2 = 0 then
-    Print(c);
+    Print(c, "\n");
   fi;
   c := c + 1;
 until c > 10;
@@ -54,7 +54,7 @@ i := 0;; s := 0;;
 while s <= 200 do
   i := i + 1; s := s + i^2;
 od;
-Print(i, s);
+Print("i = ", i, ", s = ", s, "\n");
 
 #
 # sum up the squares 1^2, 2^2, ... until the sum exceeds 200
@@ -63,4 +63,5 @@ i := 0;; s := 0;;
 repeat
   i := i + 1; s := s + i^2;
 until s > 200;
-Print(i, s);
+Print("i = ", i, ", s = ", s, "\n");
+

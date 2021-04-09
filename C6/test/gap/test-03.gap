@@ -6,6 +6,13 @@
 ##
 
 a := 5;
-Print(a, a-1);
+Print(
+  "a   =  ", a,   " [expected:  5]\n",
+  "a-1 =  ", a-1, " [expected:  4]\n"
+);
+
 b := 10*a;
-Print(b);
+Print(
+  "b   = ", b,   " [expected: 50]\n"
+);
+

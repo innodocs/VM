@@ -23,7 +23,7 @@ void usage()
       "\t-w               show warnings\n"
       "\t-d               disassemble\n"
       "\t-m               dump VM memory on exit\n"
-	  "\t-t               time execution\n"
+      "\t-t               time execution\n"
       "\t-h               show this help\n\n";
 }
 

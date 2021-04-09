@@ -81,7 +81,6 @@ object VMAssembler {
   val IPRINT  = 0x100
   val SPRINT  = 0x101
 
-
   /**
    * opcode streams
    */
@@ -165,14 +164,22 @@ object VMAssembler {
         out.writeInt(STRINGS)
         out.writeInt(nrStrings)
         if (nrStrings > 0) {
-          out.writeInt(nrStrings +
-            stringPool.foldLeft(0)((size, e) => e match {
-              case (str, _) => size + str.length
-            }))
+          val stringPoolSize = stringPool.foldLeft(0)((size, e) => e match {
+            case (str, _) => size + (str.length+1)
+          });
+//!!System.out.println("string pool size: " + stringPoolSize + ", " + stringPoolSize%4);
+
+          out.writeInt(stringPoolSize);
           stringPool.toSeq.sortBy(_._2).foreach {
             case (str, _) =>
               out.writeByte(str.length)
               str.foreach(s => out.writeByte(s))
+          }
+
+          // add end padding to full int
+          if (stringPoolSize%4 != 0) {
+            for (i <- stringPoolSize%4 until 4)
+              out.writeByte(0)
           }
         }
 
