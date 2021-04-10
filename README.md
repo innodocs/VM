@@ -99,10 +99,14 @@ would print
 We've now added support for string arguments to `Print`, so now we're
 able to format our output:
 
-    Print("a = ", a, "b = 2", b, "\n");
+    Print("a = ", a, "b = ", b, "\n");
+
+will output
+
+    a = 1, b = 2
 
 At the _VM_ level, we added an instruction for string printing, `SPRINT`, and
-a string pool to the VM file:
+a string pool to the VM file with the following structure:
 
       +-------+----- -+-------+-------+- - - -+-------+-------+- - - -+
       | string| total | str 1 | str 1 |       | str n | str n |       |
@@ -110,12 +114,26 @@ a string pool to the VM file:
       +-------+- -----+-------+-------+- - - -+-------+-------+- - - -+
 
 The assembler and compiler have to maintain a map of all encountered strings
-to avoid the inclusion of duplicates in the VM file (`stringpool.sml`)
+to avoid the inclusion of duplicates in the VM file and emit the stringpool
+as part of the VM file (`stringpool.sml`).
 
-The only real complication is the fact that _GAP_ is a language w/o type
+The only real complication is the fact that GAP is a language w/o type
 declarations, which means that appart from having to add support for types
-to the compiler (`type.sml`) we also had to add type inferencing (`inferTypes`
-in `compiler.sml`),
+to the compiler (`type.sml`)
+
+    datatype ty = ANY
+                | ANYVAL
+                | BOOL
+                | INT
+                | ANYREF
+                | STRING
+                | ARRAY of ty
+                | RECORD of (Symbol.symbol * ty) list
+                | NULL
+                | NOTHING
+                | META of ty ref
+
+we also had to implement a basic type inferencing algorithm (`inferTypes` in `compiler.sml`).
 
 The other notable change was the replacement of the simple/simplisitic way
 of handling environments with support for symbols and functional symbol
