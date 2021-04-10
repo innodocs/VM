@@ -127,6 +127,7 @@ fun eval prog = let
         in
           (v, env)
         end
+    | evalExp (A.BoolExp(b, _, _)) env = (B(b), env)
     | evalExp (A.IntExp(i, _, _)) env = (I(i), env)
     | evalExp (A.StringExp(s, _, _)) env = (S(s), env)
     | evalExp (A.BinOpExp(exp1, binop, exp2, _, _)) env = let

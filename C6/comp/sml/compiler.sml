@@ -2,16 +2,17 @@
 **  compiler.sml
 **  vm-comp
 **
-**  Created by Ovidiu Podisor on 03/15/19.
-**  Copyright © 2019-2021 innodocs. All rights reserved.
+*A  Created by Ovidiu Podisor on 03/15/19.
+*C  Copyright © 2019-2021 innodocs. All rights reserved.
 *)
 
-structure Comp : sig
+structure Comp :
+  sig
     type env
-
     val compile : Absyn.stm -> string -> unit
     val asm     : Absyn.stm -> string -> unit
-  end = struct
+  end =
+struct
 
 structure A = Absyn
 structure T = Type
@@ -30,13 +31,9 @@ type env = (int * T.ty ref) S.table
 val lastVarId = ref ~1
 
 fun addVar (sym, env: env) =
-let
-  fun newId() = (lastVarId := !lastVarId + 1; !lastVarId)
-in
   case S.lookup (env, sym) of
     SOME _ => env
-  | NONE => S.enter (env, sym, (newId(), T.undef()))
-end
+  | NONE => (lastVarId := !lastVarId + 1; S.enter (env, sym, (!lastVarId, T.undef())))
 
 fun varId (sym, env: env) =
   case S.lookup (env, sym) of
@@ -64,7 +61,7 @@ end
 
 (**
  *  reset the global environment
- *   -- call before compiling another program
+ *   - call before compiling another program
  *)
 val ifLabelId = ref 0
 val whileLabelId = ref 0
@@ -416,8 +413,8 @@ struct
             !ty
           end
       | inferTypeExp (A.RangeExp(exp1, exp2, ty, p), env) = let
-            val e1Ty = A.getType(exp1)
-            val e2Ty = A.getType(exp2)
+            val e1Ty = inferTypeExp(exp1, env)
+            val e2Ty = inferTypeExp(exp2, env)
             val uTy = T.unify(A.getType(exp1), A.getType(exp2))
           in
             if uTy = T.NOTHING

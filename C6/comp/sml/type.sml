@@ -72,4 +72,15 @@ struct
     | toString NULL = "Null"
     | toString NOTHING = "Nothing"
     | toString (META rTy) = "Meta[" ^ toString (!rTy) ^ "]"
+
+
+  (**
+   *  debug
+   * )
+  fun prUTy(loc, e1Ty, e2Ty, uTy) =
+    print (loc ^ "::unify("
+     ^ toString(e1Ty) ^ ", " ^ toString(e2Ty)
+     ^ ") = " ^ toString(uTy) ^ "\n")
+
+   *)
 end
