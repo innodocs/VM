@@ -13,9 +13,9 @@ sig
   val str: entry -> string
 
   val clear : unit -> unit
+  val size  : unit -> int
   val add   : string -> entry
   val lookup: string -> entry option
-  val size  : unit -> int
   val emit  : (int -> unit) -> unit
 end
 
@@ -32,9 +32,9 @@ struct
   fun id  (s, n) = n
   fun str (s, n) = s
 
-  fun clear()= (HashTable.clear stringTable; nextstring := ~1)
-  val size   = (fn () => HashTable.numItems stringTable)
-  val lookup = HashTable.find stringTable
+  fun clear() = (HashTable.clear stringTable; nextstring := ~1)
+  fun size()  = HashTable.numItems stringTable
+  val lookup  = HashTable.find stringTable
 
   fun add str = case lookup str of
       SOME e => e
@@ -80,7 +80,8 @@ struct
 
     val nrStrings = HashTable.numItems stringTable
   in
-    if nrStrings > 0 then let
+    if nrStrings > 0 then
+      let
         val sorted = Array.array (nrStrings, "")
         val _ = HashTable.app (fn (s, n) => Array.update(sorted, n, s)) stringTable
         val stringPoolSize = Array.foldl (fn (str, sum) => sum + 1 + String.size str) 0 sorted

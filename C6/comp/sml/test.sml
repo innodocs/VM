@@ -131,7 +131,7 @@ val prog4 =
    
 fun run() = let
   val progs = [(prog1, "prog-01"), (prog2, "prog-02"), (prog3, "prog-03"), (prog4, "prog-04")]
-  val files = ["test-01", "test-02", "test-03", "test-04", "test-05"]
+  val files = ["test-01", "test-02", "test-03", "test-04", "test-05", "test-06"]
 in
   map (fn p => let val fp = "../../test/gen/" ^ (#2 p) in
          (print ("\n" ^ (#2 p) ^ ":\n");

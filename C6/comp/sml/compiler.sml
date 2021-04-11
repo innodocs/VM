@@ -35,29 +35,16 @@ fun addVar (sym, env: env) =
     SOME _ => env
   | NONE => (lastVarId := !lastVarId + 1; S.enter (env, sym, (!lastVarId, T.undef())))
 
-fun varId (sym, env: env) =
+fun varId (sym, env: env, p) =
   case S.lookup (env, sym) of
     SOME (i, _) => i
-  | NONE => raise TypeError("undefined variable '" ^ S.name sym ^ "'")
+  | NONE => raise TypeError("undefined variable '" ^ S.name sym ^ "'", p)
 
-fun varType (sym, env: env) =
+fun varType (sym, env: env, p) =
   case S.lookup (env, sym) of
     SOME (_, ty) => !ty
-  | NONE => raise TypeError("undefined variable '" ^ S.name sym ^ "'")
+  | NONE => raise TypeError("undefined variable '" ^ S.name sym ^ "'", p)
 
-fun unifyVarType(sym, env, ty) =
-let
-  val vTyR = case S.lookup (env, sym) of
-      SOME (_, ty) => ty
-    | NONE => raise TypeError("undefined variable '" ^ S.name sym ^ "'")
-  val uTy = T.unify(!vTyR, ty)
-in
-  if uTy = T.NOTHING
-    then raise TypeError("no compatible type for '" ^ S.name sym ^ "' found")
-  else
-    vTyR := uTy;
-  uTy
-end
 
 (**
  *  reset the global environment
@@ -129,7 +116,7 @@ struct
     fun nextForLabels(startP, endP)    = nextLoopLabels (forLabelId, "for", startP, endP)
     fun nextRepeatLabels(startP, endP) = nextLoopLabels (repeatLabelId, "repeat", startP, endP)
 
-    fun jmpInstr (A.BinOpExp(_, binop, _, _, _)) = (case binop of
+    fun jmpInstr (A.BinOpExp(_, binop, _, _, _), p) = (case binop of
             A.EqOp  => I.IF_ICMPEQ
           | A.NeqOp => I.IF_ICMPNE
           | A.LtOp  => I.IF_ICMPLT
@@ -138,14 +125,14 @@ struct
           | A.GeOp  => I.IF_ICMPGE
           | A.AndOp => I.IF_INE
           | A.OrOp  => I.IF_INE
-          | _       => (raise TypeError("expected <bool>"); I.HALT))
-      | jmpInstr (A.UnOpExp(unop, _, _, _)) = (case unop of
+          | _       => (raise TypeError("incompatible type, expected Bool", p); I.HALT))
+      | jmpInstr (A.UnOpExp(unop, _, _, _), p) = (case unop of
             A.NotOp => I.IF_INE
-          | _       => (raise TypeError("expected <bool>"); I.HALT))
-      | jmpInstr _  =  (raise TypeError("expected <bool>"); I.HALT)
+          | _       => (raise TypeError("incompatible type, expected Bool", p); I.HALT))
+      | jmpInstr (_, p) =  (raise TypeError("incompatible type, expected Bool", p); I.HALT)
    
     fun compileExp (exp, env) = case exp of
-            A.VarExp(A.SimpleVar(name, _), _) => instr_(I.ILOADG, varId(name, env))
+            A.VarExp(A.SimpleVar(name, p), _) => instr_(I.ILOADG, varId(name, env, p))
           | A.BoolExp(b, _, _) => instr_(I.IPUSHC, if b then 1 else 0)
           | A.IntExp(num, _, _) => instr_(I.IPUSHC, num)
           | A.StringExp(s, _, _) => instr__(I.SPUSHC, SP.id(SP.add(s)), s)
@@ -172,8 +159,8 @@ struct
               case unop of
                 A.NegOp   => instr(I.INEG)
               | A.NotOp   => instr(I.INOT))
-          | A.RangeExp(startExp, endExp, _, _) =>
-                  raise TypeError("bad expression")
+          | A.RangeExp(startExp, endExp, _, p) =>
+                  raise TypeError("bad expression", p)
      
     and compileStm (stm, env) = case stm of
             A.EmptyStm(_) => ()
@@ -182,7 +169,7 @@ struct
 
           | A.SeqStm(stms) => List.app (fn stm => compileStm(stm, env)) stms
           
-          | A.IfStm(tstExp, thenStm, elseStmO, _) =>
+          | A.IfStm(tstExp, thenStm, elseStmO, p) =>
               let
                 val tstStr = E.newMemStream()
                 val tstLen = E.withStream tstStr (fn () => compileTestExp(tstExp, env))
@@ -212,7 +199,7 @@ struct
                 E.emitLabel startLabel;
                 E.mergeStream tstStr;
                 E.emitJump(
-                    Instr.not (jmpInstr tstExp), 
+                    Instr.not (jmpInstr (tstExp, p)),
                     if elseLen > 0 then elseLabel else endLabel);
                 
                 E.mergeStream thenStr;
@@ -225,7 +212,7 @@ struct
                 E.emitLabel endLabel                
               end
  
-          | A.WhileStm(tstExp, bodyStm, _) =>
+          | A.WhileStm(tstExp, bodyStm, p) =>
               let
                 val tstStr = E.newMemStream()
                 val tstLen = E.withStream tstStr (fn () => compileTestExp(tstExp, env))
@@ -247,25 +234,25 @@ struct
               in
                 E.emitLabel startLabel;
                 E.mergeStream tstStr;
-                E.emitJump (I.not (jmpInstr tstExp), endLabel);
+                E.emitJump (I.not (jmpInstr(tstExp, p)), endLabel);
                 E.mergeStream bodyStr;
                 E.emitJump (I.GOTO, startLabel);
                 E.emitLabel endLabel
             end
 
-          | A.ForStm(A.SimpleVar(name, _), rangeExp, bodyStm, _) =>
+          | A.ForStm(A.SimpleVar(name, _), rangeExp, bodyStm, p) =>
               let
                 val tstStr = E.newMemStream()
                 val (startExp, endExp) = case rangeExp of
                     A.RangeExp(startExp, endExp, _, _) => (startExp, endExp)
-                  | _ => raise TypeError("range exected")
+                  | _ => raise TypeError("range exected", p)
                 val startStr = E.newMemStream()
                 val startLen = E.withStream startStr (fn () => compileBlock(A.ExpStm(startExp), env))
                 val endStr = E.newMemStream()
                 val endLen = E.withStream endStr (fn () => compileBlock(A.ExpStm(endExp), env))
                 val bodyStr = E.newMemStream()
                 val bodyLen = E.withStream bodyStr (fn () => compileBlock(bodyStm, env))
-                val idSlot = varId(name, env)
+                val idSlot = varId(name, env, p)
 
                 val (startLabel, endLabel) = nextForLabels(
                     (* jump to start of loop:
@@ -302,7 +289,7 @@ struct
                instr (I.IPOP)
            end
 
-          | A.RepeatStm(tstExp, bodyStm, _) =>
+          | A.RepeatStm(tstExp, bodyStm, p) =>
               let
                 val tstStr = E.newMemStream()
                 val tstLen = E.withStream tstStr (fn () => compileTestExp(tstExp, env))
@@ -322,16 +309,16 @@ struct
                 E.emitLabel startLabel;
                 E.mergeStream bodyStr;
                 E.mergeStream tstStr;
-                E.emitJump (I.not (jmpInstr tstExp), startLabel);
+                E.emitJump (I.not (jmpInstr (tstExp, p)), startLabel);
                 E.emitLabel endLabel
             end
 
-          | A.AssignStm(A.SimpleVar(name, _), exp, _) => (
+          | A.AssignStm(A.SimpleVar(name, _), exp, p) => (
               compileExp(exp, env);
               (* this is the variable definition *)
-              instr_(I.ISTOREG, varId(name, env)))
+              instr_(I.ISTOREG, varId(name, env, p)))
 
-          | A.PrintStm(exps, _) => (
+          | A.PrintStm(exps, p) => (
               if List.exists (fn exp => A.getType(exp) = T.STRING) exps
                 then
                   List.app
@@ -342,7 +329,7 @@ struct
                       case ty of
                         T.INT => instr_(I.IPRINT, 1)
                       | T.STRING => instr_(I.SPRINT, 1)
-                      | _ => raise TypeError("Print[" ^ T.toString(ty) ^ "T] not defined")
+                      | _ => raise TypeError("Print[" ^ T.toString(ty) ^ "T] not defined", p)
                     end)
                     exps
               else (
@@ -389,95 +376,129 @@ struct
     (**
      *  type inference
      *)
-    fun expectType (exp, ty) =
+    fun expectType (ty, exp, env, p) =
     let
-      val uTy = T.unify(ty, A.getType(exp))
+      val eTy = A.getType(exp)
     in
-      if uTy = T.NOTHING
-        then raise TypeError("type inference failed, expected type " ^ T.toString ty)
-      else A.setType(exp, uTy);
-      uTy
+      if eTy = ty then ty
+      else let
+          val uTy = T.unify(ty, eTy)
+        in
+          if uTy = T.NOTHING
+            then raise TypeError("type inference failed, expected type " ^ T.toString ty, p)
+          else
+            (* in case of a VarExp, update environment w/ new type *)
+            case exp of
+              A.VarExp(A.SimpleVar(name, p), ty) => let
+                  val vTy = case S.lookup (env, name) of
+                      SOME (_, ty) => ty
+                    | NONE => raise TypeError("undefined variable '" ^ S.name name ^ "'", p)
+                  val uTy = T.unify(!vTy, !ty)
+                in
+                 if uTy = T.NOTHING
+                   then raise TypeError("type inference failed, no compatible type for '" ^ S.name name ^ "' found", p)
+                 else
+                   vTy := uTy
+               end
+           | _ => ();
+
+          (* run inference again down the expression tree when type changed *)
+          A.setType(exp, uTy);
+          inferTypeExp(exp, env);
+          uTy
+        end
     end
 
-    fun inferTypeExp (exp as A.BoolExp(_, ty, p), env) = expectType(exp, T.BOOL)
-      | inferTypeExp (exp as A.IntExp(_, ty, p), env) = expectType(exp, T.INT)
-      | inferTypeExp (exp as A.StringExp(_, ty, p), env) = expectType(exp, T.STRING)
-      | inferTypeExp (A.VarExp(A.SimpleVar(name, _), ty), env) = let
-            val uTy = T.unify(varType(name, env), !ty)
+    and inferTypeExp (exp as A.BoolExp(_, ty, p), env) = expectType(T.BOOL, exp, env, p)
+      | inferTypeExp (exp as A.IntExp(_, ty, p), env) = expectType(T.INT, exp, env, p)
+      | inferTypeExp (exp as A.StringExp(_, ty, p), env) = expectType(T.STRING, exp, env, p)
+      | inferTypeExp (exp as A.VarExp(A.SimpleVar(name, p), ty), env) = let
+            val vTy = case S.lookup (env, name) of
+                        SOME (_, vTy) => vTy
+                      | NONE => raise TypeError("undefined variable '" ^ S.name name ^ "'", p)
+            val uTy = T.unify(!vTy, !ty)
           in
             if uTy = T.NOTHING
-              then raise TypeError("type inference failed (VarExp[" ^ S.name name ^ "])")
+             then raise TypeError("type inference failed, no compatible type for '" ^ S.name name ^ "' found", p)
             else (
-              unifyVarType(name, env, uTy);
-              ty := uTy);
-            !ty
+               ty := uTy;
+               vTy := uTy);
+            uTy
           end
-      | inferTypeExp (A.RangeExp(exp1, exp2, ty, p), env) = let
+      | inferTypeExp (A.RangeExp(exp1, exp2, ty, p), env) =
+          let
             val e1Ty = inferTypeExp(exp1, env)
             val e2Ty = inferTypeExp(exp2, env)
             val uTy = T.unify(A.getType(exp1), A.getType(exp2))
           in
             if uTy = T.NOTHING
-              then raise TypeError("<bad unify: RangeExp>")
-            else ty := T.ARRAY(uTy);
+              then raise TypeError("type inference failed in range expression", p)
+            else (
+              ty := T.ARRAY(uTy);
+              expectType(uTy, exp1, env, p);
+              expectType(uTy, exp2, env, p));
             !ty
           end
-      | inferTypeExp (A.UnOpExp(unop, exp, ty, p), env) = let
+      | inferTypeExp (A.UnOpExp(unop, exp, ty, p), env) =
+          let
             val eTy = case unop of
                 A.NegOp => T.INT
               | A.NotOp => T.BOOL
           in
-            expectType(exp, eTy);
             ty := eTy;
+            expectType(eTy, exp, env, p);
             !ty
           end
-      | inferTypeExp (A.BinOpExp(exp1, binop, exp2, ty, p), env) = let
-            val eTy = case binop of
-                A.PlusOp  => T.INT
-              | A.MinusOp => T.INT
-              | A.TimesOp => T.INT
-              | A.DivOp   => T.INT
-              | A.ModOp   => T.INT
-              | A.PowOp   => T.INT
-              | A.EqOp    => T.BOOL
-              | A.NeqOp   => T.BOOL
-              | A.LtOp    => T.BOOL
-              | A.LeOp    => T.BOOL
-              | A.GtOp    => T.BOOL
-              | A.GeOp    => T.BOOL
-              | A.AndOp   => T.BOOL
-              | A.OrOp    => T.BOOL
-            val tyExp1 = T.unify(eTy, A.getType(exp1))
-            val tyExp2 = T.unify(eTy, A.getType(exp2))
-            val uTy = T.unify(tyExp1, tyExp2)
+      | inferTypeExp (A.BinOpExp(exp1, binop, exp2, ty, p), env) =
+          let
+            val (opTy, eTy) = case binop of
+                A.PlusOp  => (T.INT, T.INT)
+              | A.MinusOp => (T.INT, T.INT)
+              | A.TimesOp => (T.INT, T.INT)
+              | A.DivOp   => (T.INT, T.INT)
+              | A.ModOp   => (T.INT, T.INT)
+              | A.PowOp   => (T.INT, T.INT)
+              | A.EqOp    => (T.BOOL, T.ANY)
+              | A.NeqOp   => (T.BOOL, T.ANY)
+              | A.LtOp    => (T.BOOL, T.INT)
+              | A.LeOp    => (T.BOOL, T.INT)
+              | A.GtOp    => (T.BOOL, T.INT)
+              | A.GeOp    => (T.BOOL, T.INT)
+              | A.AndOp   => (T.BOOL, T.BOOL)
+              | A.OrOp    => (T.BOOL, T.BOOL)
+            val e1Ty = T.unify(eTy, A.getType(exp1))
+            val e2Ty = T.unify(eTy, A.getType(exp2))
+            val uTy = T.unify(e1Ty, e2Ty)
           in
             if uTy = T.NOTHING
-              then raise TypeError("<bad unify: BinOpExp>")
+              then raise TypeError("unification of binary op failed", p)
             else (
-              expectType(exp1, uTy);
-              expectType(exp2, uTy);
-              ty := uTy);
+              ty := opTy;
+              expectType(uTy, exp1, env, p);
+              expectType(uTy, exp2, env, p));
             !ty
           end
 
     fun inferTypes (A.EmptyStm(_), env: env) = env
-      | inferTypes (A.ExpStm(exp), env)= env (*!! remove: not in GAP *)
+      | inferTypes (A.ExpStm(exp), env)= env
       | inferTypes (A.PrintStm(exps, _), env) = (
           List.app (fn e => (inferTypeExp(e, env); ())) exps;
           env)
       | inferTypes (A.SeqStm(stms), env) = List.foldl inferTypes env stms
-      | inferTypes (A.AssignStm(A.SimpleVar(name, _), exp, p), env) = let
-          val uTy = T.unify(varType(name, env), inferTypeExp(exp, env))
+      | inferTypes (A.AssignStm(v as A.SimpleVar(name, _), exp, p), env) = let
+          val vTy = varType(name, env, p)
+          val eTy = inferTypeExp(exp, env)
+          val uTy = T.unify(vTy, eTy)
         in
           if uTy = T.NOTHING
-            then raise TypeError("<bad unify: Assign>")
+            then raise TypeError("unification of assignment failed", p)
           else (
-            unifyVarType(name, env, uTy);
-            expectType(exp, uTy));
+            expectType(uTy, A.VarExp(v, ref vTy), env, p);
+            expectType(uTy, exp, env, p));
           env
         end
       | inferTypes (A.IfStm(tstExp, thenStm, elseStm, p), env) = let
-            val _ = expectType(tstExp, T.BOOL)
+            val _ = expectType(T.BOOL, tstExp, env, p)
           in
             inferTypes(thenStm, env);
             case elseStm of
@@ -485,23 +506,24 @@ struct
             | NONE => env
           end
       | inferTypes (A.WhileStm(tstExp, bodyStm, p), env) = (
-          expectType(tstExp, T.BOOL);
+          expectType(T.BOOL, tstExp, env, p);
           inferTypes(bodyStm, env))
       | inferTypes (A.RepeatStm(tstExp, bodyStm, p), env) = (
-          expectType(tstExp, T.BOOL);
+          expectType(T.BOOL, tstExp, env, p);
           inferTypes(bodyStm, env))
-      | inferTypes (A.ForStm(A.SimpleVar(name, _), rangeExp, bodyStm, p), env) = let
-            val rTy = T.unify(T.ARRAY(!(T.undef())), inferTypeExp(rangeExp, env))
+      | inferTypes (A.ForStm(v as A.SimpleVar(name, _), rangeExp, bodyStm, p), env) = let
+            val vTy = varType(name, env, p)
+            val rTy = inferTypeExp(rangeExp, env)
+            (*val T.ARRAY(uTy) = expectType(T.ARRAY(T.ANY), rangeExp, env, p)*)
             val uTy = case rTy of
-                T.ARRAY(eTy) => T.unify(eTy, varType(name, env))
-              | _ => raise TypeError("for statement: range type should be Array[*]")
+                T.ARRAY(eTy) => T.unify(eTy, vTy)
+              | _ => raise TypeError("unification in for statement failed: range type should be Array[*]", p)
           in
             if uTy = T.NOTHING
-              then raise TypeError("for statement: bad unify")
+              then raise TypeError("unification in for range expression failed", p)
             else (
-              unifyVarType(name, env, uTy);
-              expectType(rangeExp, T.ARRAY(uTy)));
-            inferTypes(bodyStm, env)
+              expectType(uTy, A.VarExp(v, ref vTy), env, p);
+              inferTypes(bodyStm, env))
           end
 
   in

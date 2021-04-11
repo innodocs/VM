@@ -105,7 +105,7 @@ will output
 
     a = 1, b = 2
 
-At the _VM_ level, we added an instruction for string printing, `SPRINT`, and
+At the VM level, we added an instruction for string printing, `SPRINT`, and
 a string pool to the VM file with the following structure:
 
       +-------+----- -+-------+-------+- - - -+-------+-------+- - - -+
