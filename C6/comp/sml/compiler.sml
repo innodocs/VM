@@ -389,11 +389,11 @@ struct
           else
             (* in case of a VarExp, update environment w/ new type *)
             case exp of
-              A.VarExp(A.SimpleVar(name, p), ty) => let
+              A.VarExp(A.SimpleVar(name, p), _) => let
                   val vTy = case S.lookup (env, name) of
                       SOME (_, ty) => ty
                     | NONE => raise TypeError("undefined variable '" ^ S.name name ^ "'", p)
-                  val uTy = T.unify(!vTy, !ty)
+                  val uTy = T.unify(uTy, !vTy)
                 in
                  if uTy = T.NOTHING
                    then raise TypeError("type inference failed, no compatible type for '" ^ S.name name ^ "' found", p)
@@ -402,7 +402,7 @@ struct
                end
            | _ => ();
 
-          (* run inference again down the expression tree when type changed *)
+          (* run inference again down the expression tree when type changes *)
           A.setType(exp, uTy);
           inferTypeExp(exp, env);
           uTy
