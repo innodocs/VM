@@ -379,29 +379,29 @@ struct
     fun expectType (ty, exp, env, p) =
     let
       val eTy = A.getType(exp)
+      val uTy = T.unify(ty, eTy)
     in
-      if eTy = ty then ty
+      if eTy = uTy
+        then uTy
+      else if uTy = T.NOTHING
+        then raise TypeError("type inference failed, expected type " ^ T.toString ty, p)
       else let
-          val uTy = T.unify(ty, eTy)
-        in
-          if uTy = T.NOTHING
-            then raise TypeError("type inference failed, expected type " ^ T.toString ty, p)
-          else
-            (* in case of a VarExp, update environment w/ new type *)
-            case exp of
+          val uTy = case exp of
+              (* in case of a VarExp, update environment w/ new type *)
               A.VarExp(A.SimpleVar(name, p), _) => let
                   val vTy = case S.lookup (env, name) of
                       SOME (_, ty) => ty
                     | NONE => raise TypeError("undefined variable '" ^ S.name name ^ "'", p)
                   val uTy = T.unify(uTy, !vTy)
                 in
-                 if uTy = T.NOTHING
-                   then raise TypeError("type inference failed, no compatible type for '" ^ S.name name ^ "' found", p)
-                 else
-                   vTy := uTy
-               end
-           | _ => ();
-
+                  if uTy = T.NOTHING
+                    then raise TypeError("type inference failed, no compatible type for '" ^ S.name name ^ "' found", p)
+                  else (
+                    vTy := uTy;
+                    uTy)
+                end
+            | _ => uTy
+        in
           (* run inference again down the expression tree when type changes *)
           A.setType(exp, uTy);
           inferTypeExp(exp, env);
