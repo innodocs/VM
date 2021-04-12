@@ -23,11 +23,14 @@ struct
 
   exception Error of string * int
 
-  fun isValType BOOL = true
+  fun isValType ANYVAL = true
+    | isValType BOOL = true
     | isValType INT = true
     | isValType _ = false
 
-  fun isRefType STRING = true
+  fun isRefType ANYREF = true
+    | isRefType NULL = true
+    | isRefType STRING = true
     | isRefType (ARRAY _) = true
     | isRefType (RECORD _) = true
     | isRefType _ = false
