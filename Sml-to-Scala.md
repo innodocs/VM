@@ -60,8 +60,8 @@ signature/struture:
 follow the following steps:
 
 1. create a new file `stringpool.scala` (or copy `stringpool.sml` into `stringpool.scala`
-   if you want to keep comments, headers, aso asf)
-2. create a `sealed trait STRING_POOL` and copy all declarations from the sml signature
+   if you want to retain comments, headers, aso asf)
+2. create a `sealed trait STRING_POOL` and copy all declarations from the _SML_ signature
    into it, like so:
 
         sealed trait STRING_POOL {
@@ -92,7 +92,7 @@ follow the following steps:
         }
     
 4. create a private `StringPoolImp` object which will contain the actual implementation
-   from the `StringPool` SML structure:
+   from the `StringPool` _SML_ structure:
    
         private object StringPoolImp extends STRING_POOL {
           <structure implementaton goes here>
