@@ -3,7 +3,8 @@
 <h2>Notes on Migrating from SML to Scala</h2>
 
 * [Basic Types](#basic-types)
-* [Variable Definitions](#variable-definitions)
+* [Variable Declarations](#variable-declarations)
+* [Datatypes](#datatypes)  
 * [Signatures and Structures](#signatures-and-structures)
 
 <br/>
@@ -21,12 +22,65 @@ _ty_ __list__   | __List__[_ty_]
 ... |
 
 <br/>
-<h3>Variable Definitions</h3>
+<h3>Variable Declarations</h3>
 
 SML | Scala
 ----| -------------
-__val__ _name_ __=__ _value_     | val _name_ __=__ _value_
+__val__ _name_ __=__ _value_     | __val__ _name_ __=__ _value_
 __val__ _name_ __= ref__ _value_ | __var__ _name_ __=__ _value_
+
+<br/>
+<h3>Dataypes</h3>
+
+For nullary constructor datatypes:
+
+SML | Scala
+----| -------------
+__datatype__ _ty-name_ __=__ | __sealed trait__ _ty-name_
+nullary value constructors: |
+_vconstructor-name_ | __case object__ _vconstructor-name_ __extends__ _ty-name_
+value constructors w/o arguments: |
+_vconstructor-name_ __of__ _ty_ | __case class__ _vconstructor-name_ __(__ _ty_ __) extends__ _ty-name_
+
+For example, to convert the `ty` datatype declaration below
+
+      datatype ty = ANY
+      | ANYVAL
+      | BOOL
+      | INT
+      | ANYREF
+      | STRING
+      | ARRAY of ty
+      | RECORD of (Symbol.symbol * ty) list
+      | NULL
+      | NOTHING
+      | META of ty ref
+
+follow the steps
+
+1. replace `datatype ty =` with `sealed trait Ty`
+2. replace nullary value constructor `ANY` with `case object ANY extends Ty`
+3. replace value constructor w/ arguments `ARRAY of ty` with
+   `case class ARRAY(ty: Ty) extends Ty`
+4. for `ref` types use a `var` constructor argument (vs `val` for
+everything else), e.g. `META of ty ref` will be translated to
+   `case class  META(var ty: Ty) extends Ty`
+   
+Here is the _Scala_ construct corresponding to the _SML_
+`datatype` declaratio above:
+
+      sealed trait Ty
+      case object ANY    extends Ty
+      case object ANYVAL extends Ty
+      case object BOOL   extends Ty
+      case object INT    extends Ty
+      case object ANYREF extends Ty
+      case object STRING extends Ty
+      case class  ARRAY(ty: Ty) extends Ty
+      case class  RECORD(lts: List[(String, Ty)]) extends Ty
+      case object NULL extends Ty
+      case object NOTHING extends Ty
+      case class  META(var ty: Ty) extends Ty
 
 
 <br/>
@@ -57,7 +111,7 @@ signature/struture:
       <structure implementaton>
     end
 
-follow the following steps:
+follow the steps:
 
 1. create a new file `stringpool.scala` (or copy `stringpool.sml` into `stringpool.scala`
    if you want to retain comments, headers, aso asf)
@@ -97,3 +151,15 @@ follow the following steps:
         private object StringPoolImp extends STRING_POOL {
           <structure implementaton goes here>
         }
+
+
+clausal function expression, pg 53
+each component pat => exp is called a clause
+entire assembly of rules is called a match
+
+nullary type constructor
+
+datatype suit = Spades | Hearts | Diamonds | Clubs
+This declaration introduces a new type suit with four nullary value
+constructors, Spades, Hearts, Diamonds, and Clubs
+
