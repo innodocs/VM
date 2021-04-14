@@ -1,6 +1,6 @@
 # VM
 
-<h2>Notes on Migrating _SML_ to _Scala_</h2>
+<h2>Notes on Migrating from *SML* to *Scala*</h2>
 
 * [Basic Types](#basic-types)
 * [Variable Definitions](#variable-definitions)
@@ -68,7 +68,7 @@ becomes
 and
 
     structure StringPool : STRING_POOL = struct
-      ...
+      <structure implementaton>
     end
 
 becomes
@@ -86,5 +86,5 @@ becomes
     }
     
     private object StringPoolImp extends STRING_POOL {
-      <actual structure implementaton goes here>
+      <structure implementaton goes here>
     }

@@ -2,6 +2,12 @@
 
 <h2>Virtual Machine Development</h2>
 
+* [Introduction](#introduction)
+* [Building the System](#building-the-system)
+* [Notes on Migrating from SML to Scala](#notes-on-migrating-from-sml-to-scala)
+* [Bibliography](#bibliography)
+
+<h3>Introduction</h3>
 The goal of this "VM" project is to build a language system complete
 with virtual machines, compilers, assemblers and translators
 (GAP to C etc).
@@ -22,6 +28,7 @@ lecture on language systems. The chapters are as follows:
   `compiler` file into separate files.
 * [C6](#C6): add string type to compiler, add string pool, string constants, string printing to VM/Asm
 
+<br/>
 <h4>Folder Structure</h4>
 
 Each chapter folder is structured in the same way:
@@ -33,7 +40,8 @@ Each chapter folder is structured in the same way:
   holds the SML-NJ version
 * test: test programs
 
-<h4>Building the System</h4>
+<br/>
+<h3>Building the System</h3>
 
 Given our goal of accessibility, we have attempted to make building
 and experimenting with the system as simple as possible. As
@@ -81,6 +89,7 @@ For the `sml` build:
     cd comp/sml
     sml sources.cm
     Test.run();
+
 
 <br/>
 <h3>C6</h3>
@@ -139,7 +148,15 @@ The other notable change was the replacement of the simple/simplisitic way
 of handling environments with support for symbols and functional symbol
 tables (see [APPL1998], pg 107 - 111) (`symbol.sml`).
 
+<br/>
+<h3>Notes on Migrating from SML to Scala</h3>
 
+The file `Sml-to-Scala.md` in the dist root folder contains instructions on how to
+convert _SML_ code to _Scala_. Understand that this is the way we've handled the
+migration, and there are probably other/better ways to do it.
+
+
+<br/>
 <h3>Bibliography</h3>
 
 [APPL1998] Andrew W. Appel, *Modern Compiler Implementation in ML*; 1998. (https://www.cs.princeton.edu/~appel/modern/ml/)
