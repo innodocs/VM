@@ -37,7 +37,9 @@ SML | Scala
 __signature__ _name_ | __sealed trait__ _name_
 __structure__ _name_ __:__ _sig-name_ | __object__ _name_ __extends__ _sig-name_
 __= struct__ | __private object__ _nameImp_ __extends__ _sig-name_
-For example:
+
+For example for converting file `stringpool.sml` containing the following
+signature/struture:
 
     signature STRING_POOL = sig
       type entry
@@ -51,40 +53,47 @@ For example:
       val emit  : (int -> unit) -> unit
     end
 
-becomes
-
-    sealed trait STRING_POOL {
-      type Entry
-      val id : Entry => Int
-      val str: Entry => String
-      
-      val clear : Unit => Unit
-      val size  : Unit => Int
-      val add   : String => Entry
-      val lookup: String => Option[Entry]
-      val emit  : (Int => Unit) => Unit
-    }
-
-and
-
     structure StringPool : STRING_POOL = struct
       <structure implementaton>
     end
 
-becomes
+follow the following steps:
 
-    object StringPool extends STRING_POOL {
-      type Entry = (String, Int)
-      val id = StringPoolImp.id
-      val str= StringPoolImp.str
-      
-      val clear = StringPoolImp.clear
-      val size  = StringPoolImp.size
-      val add   = StringPoolImp.add
-      val lookup= StringPoolImp.lookup
-      val emit  = StringPoolImp.emit
-    }
+1. create a new file `stringpool.scala` (or copy `stringpool.sml` into `stringpool.scala`
+   if you want to keep comments, headers, aso asf)
+2. create a `sealed trait STRING_POOL` and copy all declarations from the sml signature
+   into it, like so:
+
+        sealed trait STRING_POOL {
+          type Entry
+          val id : Entry => Int
+          val str: Entry => String
+          
+          val clear : Unit => Unit
+          val size  : Unit => Int
+          val add   : String => Entry
+          val lookup: String => Option[Entry]
+          val emit  : (Int => Unit) => Unit
+        }
+
+3. create an `object StringPool` extending the `STRING_POOL` trait, and assign every
+`val` in the object to the corresponding implementation from `StringPoolImp`:
+
+        object StringPool extends STRING_POOL {
+          type Entry = (String, Int)
+          val id = StringPoolImp.id
+          val str= StringPoolImp.str
+          
+          val clear = StringPoolImp.clear
+          val size  = StringPoolImp.size
+          val add   = StringPoolImp.add
+          val lookup= StringPoolImp.lookup
+          val emit  = StringPoolImp.emit
+        }
     
-    private object StringPoolImp extends STRING_POOL {
-      <structure implementaton goes here>
-    }
+4. create a private `StringPoolImp` object which will contain the actual implementation
+   from the `StringPool` SML structure:
+   
+        private object StringPoolImp extends STRING_POOL {
+          <structure implementaton goes here>
+        }
