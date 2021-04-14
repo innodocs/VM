@@ -39,7 +39,7 @@ SML | Scala
 __datatype__ _ty-name_ __=__ | __sealed trait__ _ty-name_
 nullary value constructors: |
 _vconstructor-name_ | __case object__ _vconstructor-name_ __extends__ _ty-name_
-value constructors w/o arguments: |
+value constructors w/ arguments: |
 _vconstructor-name_ __of__ _ty_ | __case class__ _vconstructor-name_ __(__ _ty_ __) extends__ _ty-name_
 
 For example, to convert the `ty` datatype declaration below
@@ -151,15 +151,3 @@ follow the steps:
         private object StringPoolImp extends STRING_POOL {
           <structure implementaton goes here>
         }
-
-
-clausal function expression, pg 53
-each component pat => exp is called a clause
-entire assembly of rules is called a match
-
-nullary type constructor
-
-datatype suit = Spades | Hearts | Diamonds | Clubs
-This declaration introduces a new type suit with four nullary value
-constructors, Spades, Hearts, Diamonds, and Clubs
-
