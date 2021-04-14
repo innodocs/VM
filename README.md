@@ -13,22 +13,21 @@ with virtual machines, compilers, assemblers and translators
 (GAP to C etc).
 
 The system is being constructed in small steps, gradually and
-incrementally for the purpose of accessibility. The material
-could also be useful in a CS introductory
-lecture on language systems. The chapters are as follows:
+incrementally for the purpose of accessibility. The material could also
+be useful in a CS introductory lecture on language systems. The chapters
+are as follows:
 
-* C1: abstract syntax for SLP (Straight Line Programs [APPL1998], pg 7 - 12);
+* [C1](#C1): abstract syntax for SLP (Straight Line Programs [APPL1998], pg 7 - 12);
   compiler/emitter of VM code; and Virtual Machine for SLPs (C++, SML-NJ, Scala)
-* C2: add emitter for assembly language to compiler;
+* [C2](#C2): add emitter for assembly language to compiler;
   add simple assembler (Antlr, Java, Scala)
-* C3: lexers/parsers for SLP (Antlr, ml-lex, ml-yacc)
-* C4: replace SLP w/ GAP language (Groups, Algorithms, and Programming [GAP2021]),
+* [C3](#C3): lexers/parsers for SLP (Antlr, ml-lex, ml-yacc)
+* [C4](#C4): replace SLP w/ GAP language (Groups, Algorithms, and Programming [GAP2021]),
   implement 'if' and 'while' statements
-* C5: add 'for' and 'repeat' statements; move eval and pretty print code from
+* [C5](#C5): add 'for' and 'repeat' statements; move eval and pretty print code from
   `compiler` file into separate files.
 * [C6](#C6): add string type to compiler, add string pool, string constants, string printing to VM/Asm
 
-<br/>
 <h4>Folder Structure</h4>
 
 Each chapter folder is structured in the same way:
@@ -90,8 +89,20 @@ For the `sml` build:
     sml sources.cm
     Test.run();
 
+<br/>
+<h3>Notes on Migrating from SML to Scala</h3>
+
+The file `Sml-to-Scala.md` in the dist root folder contains instructions on how to
+convert _SML_ code to _Scala_. Understand that this is the way we've handled the
+migration, and there are probably other/better ways to do it.
 
 <br/>
+<h3>C1</h3>
+<h3>C2</h3>
+<h3>C3</h3>
+<h3>C4</h3>
+<h3>C5</h3>
+
 <h3>C6</h3>
 
 Quick notes on the functionality added in this section: until
@@ -147,13 +158,6 @@ we also had to implement a basic type inferencing algorithm (`inferTypes` in `co
 The other notable change was the replacement of the simple/simplisitic way
 of handling environments with support for symbols and functional symbol
 tables (see [APPL1998], pg 107 - 111) (`symbol.sml`).
-
-<br/>
-<h3>Notes on Migrating from SML to Scala</h3>
-
-The file `Sml-to-Scala.md` in the dist root folder contains instructions on how to
-convert _SML_ code to _Scala_. Understand that this is the way we've handled the
-migration, and there are probably other/better ways to do it.
 
 
 <br/>

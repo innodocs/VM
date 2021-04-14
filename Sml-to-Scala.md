@@ -1,6 +1,6 @@
 # VM
 
-<h2>Notes on Migrating from *SML* to *Scala*</h2>
+<h2>Notes on Migrating from SML to Scala</h2>
 
 * [Basic Types](#basic-types)
 * [Variable Definitions](#variable-definitions)
