@@ -39,8 +39,8 @@ SML | Scala
 __datatype__ _ty-name_ __=__ | __sealed trait__ _ty-name_
 nullary value constructors: |
 _vconstructor-name_ | __case object__ _vconstructor-name_ __extends__ _ty-name_
-value constructors w/ arguments: |
-_vconstructor-name_ __of__ _ty_ | __case class__ _vconstructor-name_ __(__ _ty_ __) extends__ _ty-name_
+     >0 -ary value constructors: |
+_vconstructor-name_ __of__ _tys..._ | __case class__ _vconstructor-name_ __(__ _tys..._ __) extends__ _ty-name_
 
 For example, to convert the `ty` datatype declaration below
 
@@ -60,10 +60,10 @@ follow the steps
 
 1. replace `datatype ty =` with `sealed trait Ty`
 2. replace nullary value constructor `ANY` with `case object ANY extends Ty`
-3. replace value constructor w/ arguments `ARRAY of ty` with
+3. replace n-ary value constructor `ARRAY of ty` with
    `case class ARRAY(ty: Ty) extends Ty`
 4. for `ref` types use a `var` constructor argument (vs `val` for
-everything else), e.g. `META of ty ref` will be translated to
+everything else), e.g. `META of ty ref` will becomes
    `case class  META(var ty: Ty) extends Ty`
    
 Here is the _Scala_ construct corresponding to the _SML_
