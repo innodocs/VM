@@ -86,6 +86,7 @@ int main(int argc, char* const argv[])
   VM vm(argv[0], options);
   try {
     vm.run();
+    cout << endl;
 
     if (options.dumpMem) {
       cerr << endl;

@@ -525,6 +525,8 @@ inline void VM::print()
     for (int sp = nrExps-1; sp > 0; --sp)
       cout << OP[-sp].i << ", ";
     cout << OP[0].i;
+    if (nrExps > 1)
+      cout << endl;
   }
   else {
     for (int sp = nrExps-1; sp > 0; --sp)
