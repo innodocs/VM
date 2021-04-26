@@ -27,6 +27,7 @@ are as follows:
 * [C5](#C5): add 'for' and 'repeat' statements; move eval and pretty print code from
   `compiler` file into separate files.
 * [C6](#C6): add string type to compiler, add string pool, string constants, string printing to VM/Asm
+* [C7](#C7): add functions and local function variables definitions (`function` and `local`)
 
 <h4>Folder Structure</h4>
 
@@ -159,6 +160,15 @@ The other notable change was the replacement of the simple/simplisitic way
 of handling environments with support for symbols and functional symbol
 tables (see [APPL1998], pg 107 - 111) (`symbol.sml`).
 
+<h3>C7</h3>
+In this chapter we are adding support for functions (_GAP_ `function`), local
+function variable definitions (_GAP_ `local`) and `return`s. This will require a
+rework of the code generator and emitter as the current implementation only supports
+jumps to/from block boundaries -- but `return` can jump across multiple blocks.
+
+Before diving into this we will start with a small intermediate project and
+add a translator from _GAP_ to _C++_, which is rather easy to implement given the support
+we've added thus far.
 
 <br/>
 <h3>Bibliography</h3>
