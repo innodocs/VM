@@ -242,10 +242,9 @@ struct
 
           | A.ForStm(A.SimpleVar(name, _), rangeExp, bodyStm, p) =>
               let
-                val tstStr = E.newMemStream()
                 val (startExp, endExp) = case rangeExp of
                     A.RangeExp(startExp, endExp, _, _) => (startExp, endExp)
-                  | _ => raise TypeError("range exected", p)
+                  | _ => raise TypeError("range expected", p)
                 val startStr = E.newMemStream()
                 val startLen = E.withStream startStr (fn () => compileBlock(A.ExpStm(startExp), env))
                 val endStr = E.newMemStream()
@@ -280,7 +279,7 @@ struct
 
                (* increment loop variable *)
                instr_ (I.IPUSHC, 1);
-               (* instr_ (I.ILOADG, idSlot); *)
+               (*!! instr_ (I.ILOADG, idSlot); *)
                instr (I.IADD);
                instr_ (I.ISTOREG, idSlot);
                (* next loop iteration *)
@@ -315,23 +314,20 @@ struct
 
           | A.AssignStm(A.SimpleVar(name, _), exp, p) => (
               compileExp(exp, env);
-              (* this is the variable definition *)
               instr_(I.ISTOREG, varId(name, env, p)))
 
           | A.PrintStm(exps, p) => (
               if List.exists (fn exp => A.getType(exp) = T.STRING) exps
-                then
-                  List.app
-                    (fn exp => let
-                      val ty = T.realTy(A.getType(exp))
-                    in
-                      compileExp(exp, env);
-                      case ty of
-                        T.INT => instr_(I.IPRINT, 1)
-                      | T.STRING => instr_(I.SPRINT, 1)
-                      | _ => raise TypeError("Print[" ^ T.toString(ty) ^ "T] not defined", p)
-                    end)
-                    exps
+                then List.app (fn exp => let
+                         val ty = T.realTy(A.getType(exp))
+                       in
+                         compileExp(exp, env);
+                         case ty of
+                           T.INT => instr_(I.IPRINT, 1)
+                         | T.STRING => instr_(I.SPRINT, 1)
+                         | _ => raise TypeError("Print[" ^ T.toString(ty) ^ "T] not defined", p)
+                       end)
+                       exps
               else (
                 List.app (fn exp => compileExp(exp, env)) exps;
                 instr_(I.IPRINT, length exps)))
@@ -429,7 +425,7 @@ struct
           let
             val e1Ty = inferTypeExp(exp1, env)
             val e2Ty = inferTypeExp(exp2, env)
-            val uTy = T.unify(A.getType(exp1), A.getType(exp2))
+            val uTy = T.unify(e1Ty, e2Ty)
           in
             if uTy = T.NOTHING
               then raise TypeError("type inference failed in range expression", p)
@@ -466,8 +462,8 @@ struct
               | A.GeOp    => (T.BOOL, T.INT)
               | A.AndOp   => (T.BOOL, T.BOOL)
               | A.OrOp    => (T.BOOL, T.BOOL)
-            val e1Ty = T.unify(eTy, A.getType(exp1))
-            val e2Ty = T.unify(eTy, A.getType(exp2))
+            val e1Ty = T.unify(eTy, inferTypeExp(exp1, env))
+            val e2Ty = T.unify(eTy, inferTypeExp(exp2, env))
             val uTy = T.unify(e1Ty, e2Ty)
           in
             if uTy = T.NOTHING

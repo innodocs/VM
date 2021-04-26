@@ -9,10 +9,7 @@
 structure Test = struct
 
 local
-  structure PP = PrettyPrint
-  structure E = Eval
   open AbsynUtil
-
   val sym = Symbol.symbol
 in
 
@@ -135,8 +132,8 @@ fun run() = let
 in
   map (fn p => let val fp = "../../test/gen/" ^ (#2 p) in
          (print ("\n" ^ (#2 p) ^ ":\n");
-          PP.print (#1 p);
-          E.eval (#1 p);
+          PrettyPrint.print (#1 p);
+          Eval.eval (#1 p);
           Comp.compile (#1 p) (fp ^ ".vm");
           Comp.asm (#1 p) (fp ^ ".asm");
           print("--------------\n"))

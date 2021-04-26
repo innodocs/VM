@@ -49,7 +49,7 @@ let
            ec :: escChs cs
          end
      | escChs (#"\\" :: nil) = (*!! this should never happen *)
-          (errFn ("'\\' character at end of string " ^ s); nil)
+          (errFn ("'\\' character at end of string [" ^ s ^ "]"); nil)
      | escChs (c :: cs) = c :: escChs cs
      | escChs nil = nil
 in

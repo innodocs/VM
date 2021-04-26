@@ -16,7 +16,7 @@ struct
               | ANYREF
               | STRING
               | ARRAY of ty
-              | RECORD of (Symbol.symbol * ty) list
+              | RECORD of (Symbol.ty * ty) list
               | NULL
               | NOTHING
               | META of ty ref
@@ -92,4 +92,4 @@ struct
      ^ ") = " ^ toString(uTy) ^ "\n")
 
    ( **)
-end
+end (* structure Type *)

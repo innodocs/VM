@@ -6,8 +6,7 @@
 **  Copyright © 2019-2021 innodocs. All rights reserved.
 *)
 
-signature STRING_POOL =
-sig
+signature STRING_POOL = sig
   type entry
   val id : entry -> int
   val str: entry -> string
@@ -48,8 +47,8 @@ struct
 
   fun emit emitInt =
   let
-    fun mkInt (c1, c2, c3, c4) =
-    let
+
+    fun mkInt (c1, c2, c3, c4) = let
       open Word
       infix << orb
       fun c2w c = Word.fromInt(Char.ord(c))
@@ -66,8 +65,7 @@ struct
       eis (!acc @ ints)
     end
 
-    fun emitFinalInt() =
-    let
+    fun emitFinalInt() = let
       val c0 = Char.chr 0
       val i = case !acc of
           b1 :: b2 :: b3 :: nil => mkInt(b1, b2, b3, c0)
@@ -92,5 +90,6 @@ struct
       end
     else ()
   end
-end
+
+end (* structure StringPool *)
 

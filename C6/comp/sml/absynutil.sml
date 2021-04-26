@@ -18,9 +18,9 @@ struct
 
   open Absyn;
 
-  fun BoolExp (n, p) = A.BoolExp(n, T.undef(), p)
-  fun IntExp (n, p) = A.IntExp(n, T.undef(), p)
-  fun StringExp(s, p) = A.StringExp(s, T.undef(), p)
+  fun BoolExp (n, p) = A.BoolExp(n, ref T.BOOL, p)
+  fun IntExp (n, p) = A.IntExp(n, ref T.INT, p)
+  fun StringExp(s, p) = A.StringExp(s, ref T.STRING, p)
   fun BinOpExp(e1, bo, e2, p) = A.BinOpExp(e1, bo, e2, T.undef(), p)
   fun UnOpExp(e, uo, p) = A.UnOpExp(e, uo, T.undef(), p)
   fun RangeExp(e1, e2, p) = A.RangeExp(e1, e2, T.undef(), p)

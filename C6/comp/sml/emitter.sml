@@ -2,7 +2,7 @@
 **  emitter.sml
 **  vm-comp
 **
-**  Created by Ovidiu Podisor on 01/15/19.
+**  Created by Ovidiu Podisor on 03/15/19.
 **  Copyright © 2019-2021 innodocs. All rights reserved.
 *)
   
@@ -135,7 +135,7 @@ structure VMFEmitter : EMITTER = struct
   fun emitLabel _ = ()
   fun emitJump (i, Label(_, offset)) = (emit i; emit offset)
   fun emitStrings() = StringPool.emit emit
-end
+end (* structure VMFEmitter *)
 
 
 (**
@@ -151,14 +151,14 @@ structure AsmEmitter : EMITTER = struct
   open E
 
   fun emitMeta (magic, major, minor) = emit (
-         "//\r\n" ^ "// vm-asm " ^ Int.toString(major) ^ "." ^ Int.toString(minor) ^ "\r\n//\r\n") 
-  fun emitInstr i = emit ((Instr.instrName i) ^ "\r\n") 
+         "//\n" ^ "// vm-asm " ^ Int.toString(major) ^ "." ^ Int.toString(minor) ^ "\n//\n")
+  fun emitInstr i = emit ((Instr.instrName i) ^ "\n")
   fun emitInstrI (i, arg1) = emit (
-         (Instr.instrName i) ^ " " ^ Int.toString(arg1) ^ "\r\n")
+         (Instr.instrName i) ^ " " ^ Int.toString(arg1) ^ "\n")
   fun emitInstrIS (i, arg1, arg2) = emit (
-         (Instr.instrName i) ^ " \"" ^ PrettyPrint.formatString(arg2)  ^ "\"\r\n")
+         (Instr.instrName i) ^ " \"" ^ PrettyPrint.formatString(arg2)  ^ "\"\n")
   fun emitLabel (Label(name, _)) = emit (name ^ ":\n")
   fun emitJump (opcode, Label(name, _)) = emit (
          (Instr.instrName opcode) ^ " " ^ name ^ "\n")
   fun emitStrings() = ()
-end
+end (* structure AsmEmitter *)

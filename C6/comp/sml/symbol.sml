@@ -7,25 +7,25 @@
 
 signature SYMBOL =
 sig
-  eqtype symbol
-  val symbol: string -> symbol
-  val name  : symbol -> string
+  eqtype ty
+  val symbol: string -> ty
+  val name  : ty -> string
 
   type 'a table
   val empty : 'a table
-  val enter : 'a table * symbol * 'a -> 'a table
-  val lookup: 'a table * symbol -> 'a option
+  val enter : 'a table * ty * 'a -> 'a table
+  val lookup: 'a table * ty -> 'a option
   val size  : 'a table -> int
   val list  : 'a table -> 'a list
 end
 
 structure Symbol :> SYMBOL =
 struct
-  type symbol = string * int
+  type ty = string * int
   exception Symbol
 
   val nextsym = ref 0
-  val symbolTable : (string, symbol) HashTable.hash_table =
+  val symbolTable : (string, ty) HashTable.hash_table =
         HashTable.mkTable(HashString.hashString, op =) (128, Symbol)
 
   (*
@@ -44,8 +44,8 @@ struct
 
   type 'a table = 'a IntRedBlackMap.map
   val empty = IntRedBlackMap.empty
-  fun enter (t: 'a table, (s, n): symbol, a: 'a) = IntRedBlackMap.insert(t, n, a)
-  fun lookup(t: 'a table, (s, n): symbol) = IntRedBlackMap.find(t, n)
+  fun enter (t: 'a table, (s, n): ty, a: 'a) = IntRedBlackMap.insert(t, n, a)
+  fun lookup(t: 'a table, (s, n): ty) = IntRedBlackMap.find(t, n)
   fun size  (t: 'a table) = IntRedBlackMap.numItems t
   fun list  (t: 'a table) = IntRedBlackMap.listItems t
 end

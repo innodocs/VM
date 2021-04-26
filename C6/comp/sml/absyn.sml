@@ -10,7 +10,7 @@ structure Absyn =
 struct
   structure T = Type
 
-  type id = Symbol.symbol
+  type id = Symbol.ty
   type pos = int
 
   datatype binop = PlusOp | MinusOp | TimesOp | DivOp | ModOp | PowOp
@@ -24,10 +24,10 @@ struct
        and exp = BoolExp of bool * T.ty ref * pos
                | IntExp of int * T.ty ref * pos
                | StringExp of string * T.ty ref * pos
+               | VarExp of var * T.ty ref
                | BinOpExp of exp * binop * exp * T.ty ref * pos
                | UnOpExp of unop * exp * T.ty ref * pos
                | RangeExp of exp * exp * T.ty ref * pos
-               | VarExp of var * T.ty ref
 
        and stm = EmptyStm of pos
                | ExpStm of exp

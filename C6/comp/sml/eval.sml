@@ -16,12 +16,10 @@ structure Eval : EVAL =
 struct
 
 structure A = Absyn
-structure T = Type
 structure S = Symbol
-structure C = Comp
 structure PP = PrettyPrint
 
-exception TypeError = T.Error
+exception TypeError = Type.Error
 
 datatype obj = B of bool
              | I of int
@@ -98,7 +96,7 @@ fun eval prog = let
      | evalStm (A.AssignStm (A.SimpleVar(id, _), exp, _)) env = let
            val (v, newEnv) = evalExp exp env
          in
-           S.enter (env, id, v)
+           S.enter (newEnv, id, v)
          end
      | evalStm (A.PrintStm (exps, _)) env = let
            val newEnv = case exps of
