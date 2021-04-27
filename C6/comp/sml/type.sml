@@ -6,8 +6,7 @@
 **  Copyright © 2019-2021 innodocs. All rights reserved.
 *)
 
-structure Type =
-struct
+structure Type = struct
 
   datatype ty = ANY
               | ANYVAL
@@ -48,8 +47,7 @@ struct
           l1
     | eq (t1, t2) = op=(t1, t2)
 
-  fun unify(META(t1), META(t2)) =
-        let
+  fun unify(META(t1), META(t2)) = let
           val ut = if !t1 = ANY then !t2
                    else if !t2 = ANY then !t1
                    else unify(!t1, !t2)
