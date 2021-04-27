@@ -170,8 +170,8 @@ implementation only supports computing full block jump offsets --
 but `return` can jump across multiple blocks.
 
 Before diving into this we will start with an intermediate project and
-add a translator from _GAP_ to _C++_, which is rather easy to implement given
-the prerequisites added in previous chapters.
+add a translator from _GAP_ to _C++_, which is rather easy to implement on top of
+the current code base.
 
 <br/>
 <h3>Bibliography</h3>
