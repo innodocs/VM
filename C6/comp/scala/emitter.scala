@@ -15,19 +15,19 @@ sealed trait EMITTER {
   type IOStream
   type MemStream
   
-  def withIOStream(s: IOStream): (EMITTER => Unit) => Int
-  def withStream(s: MemStream) : (EMITTER => Unit) => Int
+  def withIOStream(s: IOStream) : (EMITTER => Unit) => Int
+  def withStream(s: MemStream)  : (EMITTER => Unit) => Int
   
-  def newMemStream(): MemStream
-  def mergeStream(ms: MemStream): Unit
+  def newMemStream() : MemStream
+  def mergeStream(ms: MemStream) : Unit
   
   def emitMeta(magic: Int, major: Int, minor: Int) : Unit
   def emitInstr(opcode: Int) : Unit
   def emitInstr(opcode: Int, arg: Int) : Unit
   def emitInstr(opcode: Int, arg1: Int, arg2: String) : Unit
   def emitLabel(label: Label) : Unit
-  def emitJump(opcode: Int, label: Label): Unit
-  def emitStrings(): Unit
+  def emitJump(opcode: Int, label: Label) : Unit
+  def emitStrings() : Unit
 }
 /* end */
 
@@ -97,7 +97,7 @@ object AsmEmitter extends EmitterFun[TextIO.OutStream, StringBuilder] {
   override def emitInstr(i: Int, arg: Int) =
     emitString(Instr.instrName(i) + " " + arg.toString() + "\n")
   override def emitInstr(i: Int, arg1: Int, arg2: String) =
-    emitString(Instr.instrName(i) + " " + PrettyPrint.formatString(arg2) + "\n")
+    emitString(Instr.instrName(i) + " \"" + PrettyPrint.formatString(arg2) + "\"\n")
   override def emitLabel(label: Label) =
     emitString(label.name + ":\n")
   override def emitJump(opcode: Int, label: Label) =

@@ -1,10 +1,9 @@
-
 /*
 **  eval.scala
 **  vm-comp
 **
 **  Created by Ovidiu Podisor on 03/15/20.
-**  Copyright © 2020 innodocs. All rights reserved.
+**  Copyright © 2019-2021 innodocs. All rights reserved.
 */
 
 /*
@@ -19,14 +18,18 @@ sealed trait EVAL_SIG {
   val eval: Absyn.Stm => Env
 }
 
-//structure Eval : EVAL
+/*
+structure Eval : EVAL
+*/
 object Eval extends EVAL_SIG {
   sealed abstract class Obj
   type Env = Symbol.Table[Obj]
 
   val eval = EvalImp.eval
 }
-//= struct
+/*
+= struct
+*/
 private object EvalImp extends EVAL_SIG {
 
 val A = Absyn
@@ -43,9 +46,9 @@ datatype obj = B of bool
              | S of string
 */
 type Obj = Eval.Obj
-case class B(b: Boolean) extends Eval.Obj
-case class I(i: Int)     extends Eval.Obj
-case class S(s: String)  extends Eval.Obj
+case class B(b: Boolean) extends Obj
+case class I(i: Int)     extends Obj
+case class S(s: String)  extends Obj
 
 def boolVal (v: Obj, p: Int): Boolean = v match {
   case B(b) => b
@@ -210,10 +213,10 @@ val eval : Absyn.Stm => Eval.Env = prog => {
     }
   }
 
-  // in
+/* in */
   evalStm(prog, Symbol.Table[Obj]())
-  // end
+/* end */
 }
 
-//end (* structure Eval *)
+/* end (* structure Eval *) */
 }

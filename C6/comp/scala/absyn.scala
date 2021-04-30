@@ -2,8 +2,8 @@
  * absyn.scala
  * vm-comp
  *
- * Created by Ovidiu Podisor on 02/28/20.
- * Copyright © 2020 innodocs. All rights reserved.
+ * Created by Ovidiu Podisor on 04/12/20.
+ * Copyright © 2019-2021 innodocs. All rights reserved.
  */
 
 /*
@@ -51,12 +51,12 @@ object Absyn {
 
   /*
   and exp = BoolExp of bool * T.ty ref * pos
-         | IntExp of int * T.ty ref * pos
-         | StringExp of string * T.ty ref * pos
-         | VarExp of var * T.ty ref
-         | BinOpExp of exp * binop * exp * T.ty ref * pos
-         | UnOpExp of unop * exp * T.ty ref * pos
-         | RangeExp of exp * exp * T.ty ref * pos
+          | IntExp of int * T.ty ref * pos
+          | StringExp of string * T.ty ref * pos
+          | VarExp of var * T.ty ref
+          | BinOpExp of exp * binop * exp * T.ty ref * pos
+          | UnOpExp of unop * exp * T.ty ref * pos
+          | RangeExp of exp * exp * T.ty ref * pos
   */
   sealed abstract class Exp
   case class BoolExp(b: Boolean, var ty: T.Ty = T.BOOL, pos: Pos = 0) extends Exp
@@ -69,14 +69,14 @@ object Absyn {
 
   /*
   and stm = EmptyStm of pos
-         | ExpStm of exp
-         | SeqStm of stm list
-         | IfStm of exp * stm * stm option * pos
-         | WhileStm of exp * stm * pos
-         | ForStm of var * exp * stm * pos
-         | RepeatStm of exp * stm * pos
-         | AssignStm of var * exp * pos
-         | PrintStm of exp list * pos
+          | ExpStm of exp
+          | SeqStm of stm list
+          | IfStm of exp * stm * stm option * pos
+          | WhileStm of exp * stm * pos
+          | ForStm of var * exp * stm * pos
+          | RepeatStm of exp * stm * pos
+          | AssignStm of var * exp * pos
+          | PrintStm of exp list * pos
   */
   sealed abstract class Stm
   case class EmptyStm(pos: Pos = 0) extends Stm
@@ -93,7 +93,7 @@ object Absyn {
   /**
    *  Absyn type handling
    */
-  def getType(exp: Exp): T.Ty =  exp match {
+  def getType(exp: Exp): T.Ty = exp match {
     case BoolExp(_, ty, _)        => ty
     case IntExp(_, ty, _)         => ty
     case StringExp(_, ty, _)      => ty
@@ -103,7 +103,7 @@ object Absyn {
     case RangeExp(_, _, ty, _)    => ty
   }
 
-  def setType(exp: Exp, nTy: T.Ty): Unit =  exp match {
+  def setType(exp: Exp, nTy: T.Ty): Unit = exp match {
     case e@BoolExp(_, ty, _)        => e.ty = nTy
     case e@IntExp(_, ty, _)         => e.ty = nTy
     case e@StringExp(_, ty, _)      => e.ty = nTy

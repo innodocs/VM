@@ -48,8 +48,8 @@ private object StringPoolImp extends STRING_POOL {
   var nextstring = -1
   val stringTable = new HashMap[String, StringPool.Entry]
 
-  val id = (e: StringPool.Entry) => e match {case (s, n) => n }
-  val str= (e: StringPool.Entry) => e match {case (s, n) => s }
+  val id  = (e: StringPool.Entry) => e match {case (s, n) => n }
+  val str = (e: StringPool.Entry) => e match {case (s, n) => s }
 
   val clear = () => { nextstring = -1; stringTable.clear() }
   val size  = () => stringTable.size

@@ -7,8 +7,8 @@
  */
 
 /*
- structure Type = struct
- */
+structure Type = struct
+*/
 object Type {
   /*
   datatype ty = ANY
@@ -36,9 +36,7 @@ object Type {
   case object NOTHING extends Ty
   case class  META(var ty: Ty) extends Ty
 
-
   case class Error(s: String, pos: Absyn.Pos = 0) extends Exception(s)
-
 
   def isValType(ty: Ty): Boolean = ty match {
     case ANYVAL => true

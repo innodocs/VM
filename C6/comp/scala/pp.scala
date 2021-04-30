@@ -3,7 +3,7 @@
 **  vm-comp
 **
 **  Created by Ovidiu Podisor on 03/15/20.
-**  Copyright © 2020 innodocs. All rights reserved.
+**  Copyright © 2019-2021 innodocs. All rights reserved.
 */
 
 /*
@@ -30,7 +30,9 @@ sealed trait PRETTYPRINT_SIG {
   val formatString: String => String
 }
 
-//structure PrettyPrint : PRETTYPRINT
+/*
+structure PrettyPrint : PRETTYPRINT
+*/
 object PrettyPrint extends PRETTYPRINT_SIG {
   val print = PrettyPrintImp.print
 
@@ -41,7 +43,9 @@ object PrettyPrint extends PRETTYPRINT_SIG {
   val parseString = PrettyPrintImp.parseString
   val formatString = PrettyPrintImp.formatString
 }
-//= struct
+/*
+= struct
+*/
 private object PrettyPrintImp extends PRETTYPRINT_SIG {
 
 val A = Absyn
@@ -58,7 +62,6 @@ val printNL: () => Unit = Console.println
  * parsing/formatting strings
  */
 val parseString: (String, String => Unit) => String = (str, errFn) => {
-
   val strLen = str.length
   var sb = new StringBuilder(strLen)
   var i = 0
@@ -112,17 +115,17 @@ val formatString: String => String = str => {
  * print a statement
  */
 val print: Absyn.Stm => Unit = prog => {
-  // let
+/* let */
   val ps = printString
   val pi = printInt
   val nl = printNL
-  // in
+
+/* in */
 
   def printStm(stm: A.Stm, l: Int) : Unit = {
-    // let
+  /* let */
     def indent(level: Int): Unit = for (l <- 1 to level*2) { ps(" ") }
-
-    // in
+  /* in */
     stm match {
       case A.SeqStm(stms) => stms.foreach(s => printStm(s, l))
 
@@ -173,7 +176,7 @@ val print: Absyn.Stm => Unit = prog => {
   }
 
   def printExp(exp: A.Exp) : Unit = {
-    // let
+  /* let */
     def openParen(prec: Int, opPrec: Int) = if (prec > opPrec) ps("(")
     def closeParen(prec: Int, opPrec: Int) = if (prec > opPrec) ps(")")
 
@@ -219,19 +222,22 @@ val print: Absyn.Stm => Unit = prog => {
         print(prec+1, start); ps(" .. "); print(prec+1, end); ps("]");
     }
 
-    // in
+  /* in */
     print(0, exp)
+  /* end */
   }
 
   def printVar(v: A.Var) : Unit = v match {
     case A.SimpleVar(id, pos) => ps(S.name(id))
   }
 
-  // in
+/* in */
   printStm(prog, 0)
   nl()
-  // end
+/* end */
 }
 
-//end (* structure PrettyPrint *)
+/*
+end (* structure PrettyPrint *)
+*/
 }

@@ -2,11 +2,13 @@
 **  instr.scala
 **  vm
 **
-**  Created by Ovidiu Podisor on 02/28/20.
-**  Copyright © 2020 innodocs. All rights reserved.
+**  Created by Ovidiu Podisor on 04/12/20.
+**  Copyright © 2019-2021 innodocs. All rights reserved.
 */
 
-/* structure Instr = struct */
+/*
+structure Instr = struct
+*/
 object Instr {
 
   // code file markers
@@ -87,6 +89,7 @@ object Instr {
     case ILOADG    => "ILOADG"
     case ISTOREG   => "ISTOREG"
     case IPUSHC    => "IPUSHC"
+    case SPUSHC    => "SPUSHC"
     case IPOP      => "IPOP"
     case ISWAP     => "ISWAP"
     case IDUP      => "IDUP"
@@ -135,6 +138,8 @@ object Instr {
     case ICMPGE    => ICMPLT   
   }
       
-/* end (* structure Instr *) */
+/*
+end (* structure Instr *)
+*/
 }
   

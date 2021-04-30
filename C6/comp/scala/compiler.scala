@@ -29,7 +29,9 @@ object Comp extends COMP_SIG {
   val compile = CompImp.compile
   val asm     = CompImp.asm
 }
-/* = struct */
+/*
+= struct
+*/
 private object CompImp extends COMP_SIG {
 
 val A = Absyn
@@ -70,7 +72,7 @@ def varType(sym: S.Ty, env: Env, p: A.Pos): T.Ty =
 
 /**
  *  reset the global environment
- *   -= call before compiling another program
+ *   -- call before compiling another program
  */
 object labelId {
   var if_ = 0

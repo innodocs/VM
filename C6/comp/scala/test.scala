@@ -3,15 +3,14 @@
 **  vm
 **
 **  Created by Ovidiu Podisor on 02/28/20.
-**  Copyright © 2020 innodocs. All rights reserved.
+**  Copyright © 2019-2021 innodocs. All rights reserved.
 */
 
 object Test {
-
 /*
- local
-   open Absyn
- in
+local
+ open Absyn
+in
 */
 import Absyn._
 val sym = Symbol.symbol _
@@ -129,25 +128,24 @@ val prog4 =
 
 
 def run() = {
-  /*
-  val progs = List((prog1, "prog-01"), (prog2, "prog-02"),
-                (prog3, "prog-03"), (prog4, "prog-04"));
+
+  val progs = List((prog1, "prog-01"), (prog2, "prog-02"), (prog3, "prog-03"), (prog4, "prog-04"));
   progs.foreach(p => {
       val fp = "../../test/gen/" + p._2
       println("\n" + p._2 + ":"); PrettyPrint.print(p._1)
       println("\n>>> eval:\n");   Eval.eval(p._1)
-      Comp.compile(p._1)(fp + ".vm")
-      Comp.asm(p._1)(fp + ".asm")
+      Comp.compile(p._1)(fp + "-scala.vm")
+      Comp.asm(p._1)(fp + "-scala.asm")
       println("--------------")
   })
-*/
+
   val files = List("test-01", "test-02", "test-03", "test-04", "test-05", "test-06");
   files.foreach(f => {
     val fp = "../../test/gap/" + f
     println("\n" + f + ":");  GAP.print(fp + ".gap")
     println("\n>>> eval:\n"); GAP.eval(fp + ".gap")
-    GAP.compile(fp + ".gap") (fp + ".vm")
-    GAP.asm(fp + ".gap") (fp + ".asm")
+    GAP.compile(fp + ".gap") (fp + "-scala.vm")
+    GAP.asm(fp + ".gap") (fp + "-scala.asm")
     println("--------------")
   })
 }
